@@ -1,6 +1,8 @@
 
 Matrix append 与 prepend
 
+左乘是行变换，右乘是列变换
+
 append 定义： 右乘，是对原空间基向量进行变换，表现为坐标（对偶空间上的元素）不变，原空间基向量发生改变
 
 即对 Canvas  context 上下文基础坐标进行了变更
@@ -11,4 +13,4 @@ prepend 定义： 左乘，实际上是对坐标（或者说对偶空间上的�
 
 变幻矩阵本身进行变化计算，Canvas context 上下文基础坐标不变
 
-所以 prepend 用在父级 matrix 递归 prepend
+所以 prependMatrix 函数 用在父级 matrix 递归 prepend
