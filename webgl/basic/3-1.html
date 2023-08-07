@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+	<style type="text/css">
+		*{
+			padding:0;
+			margin:0;
+		}
+	</style>
+	<script type="importmap">
+	  {
+	    "imports": {
+	      "webglHelper": "./js/webgl-helper.js"
+	    }
+	  }
+	</script>
+
+</head>
+<body>
+	<!-- 顶点着色器源码 -->
+	<script type="shader-source" id="vertexShader">
+	 //设置浮点数精度为中等精度
+		precision mediump float;
+		// 接收顶点坐标 (x, y)
+		attribute vec2 a_Position;
+		// 接收 canvas 的尺寸(width, height)
+		attribute vec2 a_Screen_Size;
+		void main(){
+		    vec2 position = (a_Position / a_Screen_Size) * 2.0 - 1.0;
+		    position = position * vec2(1.0,-1.0);
+		    gl_Position = vec4(position, 0, 1);
+		}
+
+
+	</script>
+	
+	<!-- 片元着色器源码 -->
+	<script type="shader-source" id="fragmentShader">
+	 //设置浮点数据类型为中级精度
+precision mediump float;
+//接收 JavaScript 传过来的颜色值（rgba）。
+uniform vec4 u_Color;
+
+void main(){
+   vec4 color = u_Color / vec4(255, 255, 255, 1);
+   gl_FragColor = color;
+}
+	</script>
+	
+	<canvas id="canvas"></canvas>
+	<script type="module">
+		import { getCanvas, getWebGLContext, createShaderFromScript, createProgram, randomColor  } from 'webglHelper'
+		//获取canvas
+		var canvas = getCanvas('#canvas');
+
+		//获取webgl绘图环境
+		var gl = getWebGLContext(canvas);
+
+		//创建顶点着色器
+		var vertexShader = createShaderFromScript(gl, gl.VERTEX_SHADER,'vertexShader');
+		//创建片元着色器
+		var fragmentShader = createShaderFromScript(gl, gl.FRAGMENT_SHADER,'fragmentShader');
+
+		//创建着色器程序
+		var program = createProgram(gl ,vertexShader, fragmentShader);
+		//告诉 WebGL 运行哪个着色器程序
+		gl.useProgram(program);
+
+		var positions = [1,0, 0,1, 0,0];
+		var a_Position = gl.getAttribLocation(program, 'a_Position')
+		console.log(a_Position)
+		// return
+		// var a_Screen_Size = gl.getAttribLocation(program, 'a_Screen_Size');
+		// console.log(a_Position, a_Screen_Size)
+		// var buffer = gl.createBuffer();
+
+		// // 绑定该缓冲区为 WebGL 当前缓冲区
+		// gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
+
+
+
+		// //告诉 WebGL 如何从之前创建的缓冲区中获取数据，并且传递给顶点着色器中的 a_Position 属性。 那么，首先启用对应属性 a_Position：
+
+		// gl.enableVertexAttribArray(a_Position);
+		// gl.enableVertexAttribArray(a_Screen_Size);
+
+		// canvas.addEventListener('mouseup', e => {
+
+		//     var x = e.pageX;
+		//     var y = e.pageY;
+		//     positions.push(x, y);
+		//     debugger
+		//     if (positions.length % 6 == 0) {
+		//       //向缓冲区中复制新的顶点数据。
+		//         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+		//         //重新渲染
+		//         render(gl);
+		//     }
+		// })
+
+		// //渲染函数
+		// function render(gl) {
+		//     gl.clearColor(0, 0, 0, 1.0);
+		//     //用上一步设置的清空画布颜色清空画布。
+		//     gl.clear(gl.COLOR_BUFFER_BIT);
+		//     //绘制图元设置为三角形
+		//     var primitiveType = gl.TRIANGLES;
+		//     //从顶点数组的开始位置取顶点数据
+		//     var drawOffset = 0;
+		//     //因为我们要绘制 N 个点，所以执行 N 次顶点绘制操作。
+		//     gl.drawArrays(primitiveType, 0, positions.length / 2);
+		// }
+
+	</script>
+</body>
+</html>
