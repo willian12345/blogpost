@@ -71,11 +71,11 @@ void main(){
 
 		var positions = [1,0, 0,1, 0,0];
 		var a_Position = gl.getAttribLocation(program, 'a_Position')
-		console.log(a_Position)
+		// console.log(a_Position)
 		// return
-		// var a_Screen_Size = gl.getAttribLocation(program, 'a_Screen_Size');
-		// console.log(a_Position, a_Screen_Size)
-		// var buffer = gl.createBuffer();
+		var a_Screen_Size = gl.getAttribLocation(program, 'a_Screen_Size');
+		console.log(a_Position, a_Screen_Size)
+		var buffer = gl.createBuffer();
 
 		// // 绑定该缓冲区为 WebGL 当前缓冲区
 		// gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
