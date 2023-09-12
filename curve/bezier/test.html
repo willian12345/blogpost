@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      margin: 0;
+        background-color: ivory;
+    }
+    #canvas {
+        border:1px solid green;
+    }
+  </style>
+  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/jqueryui/1.13.2/jquery-ui.js"></script>
+</head>
+<body>
+  
+    <canvas id="canvas" width=800 height=800></canvas>
+    <script>
+      // 获取canvas和context
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+    
+  // 定义贝塞尔曲线的控制点
+  const P = [{x: 120, y: 160 }, 
+  {x:  35, y: 200 }, 
+  {x: 220, y: 260 }, 
+  {x: 180, y:  100 }, ];
+
+  // 四个点的 x
+  var PX = [P[0].x, P[1].x, P[2].x, P[3].x];
+    // 四个点的 y
+    var PY = [P[0].y, P[1].y, P[2].y, P[3].y];
+console.log(PX,PY)
+  function calculateBezierPoint(t, poly){
+    // 起点，控制点1，控制点2，终点 计算出 x 坐标
+      // x = A (1-t)^3 +3 B t (1-t)^2 + 3 C t^2 (1-t) + D t^3
+      var x = poly[0] * (1 - t) * (1 - t) * (1 - t) + 3 * poly[1] * t * (1 - t) * (1 - t) + 3 * poly[2] * t * t * (1 - t) + poly[3] * t * t * t;
+      return x;
+  }
+
+  // 计算贝塞尔曲线上某一点的切线向量
+  function calculateTangentVector(t) {
+    const n = P.length - 1;
+    const tangentVector = { x: 0, y: 0 };
+
+    for (let i = 0; i < n; i++) {
+      const coefficient = n * Math.pow(1 - t, n - 1 - i) * Math.pow(t, i);
+      tangentVector.x += coefficient * (P[i + 1].x - P[i].x);
+      tangentVector.y += coefficient * (P[i + 1].y - P[i].y);
+    }
+
+    return tangentVector;
+  }
+
+  // 绘制贝塞尔曲线
+  ctx.beginPath();
+  ctx.moveTo(P[0].x, P[0].y);
+  for (let t = 0; t <= 1; t += 0.01) {
+    const point = {x: calculateBezierPoint(t, PX), y: calculateBezierPoint(t, PY)}
+    console.log(point)
+    ctx.lineTo(point.x, point.y);
+  }
+  ctx.stroke();
+
+  // 在曲线上选择一些点，计算每个点的切线向量并绘制
+  for (let t = 0.1; t <= 0.9; t += 0.01) {
+    const point = {x: calculateBezierPoint(t, PX), y: calculateBezierPoint(t, PY)}
+    const tangentVector = calculateTangentVector(t);
+
+    // 绘制切线
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y);
+    ctx.lineTo(point.x + tangentVector.x, point.y + tangentVector.y);
+    ctx.stroke();
+  }
+  </script>
+</body>
+</html>

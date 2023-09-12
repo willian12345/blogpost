@@ -6,6 +6,7 @@
   <title>Document</title>
   <style>
     body {
+      margin: 0;
         background-color: ivory;
     }
     #canvas {
@@ -27,6 +28,7 @@
     // 参考资料
     // https://floris.briolas.nl/floris/2009/10/bounding-box-of-cubic-bezier/
     // https://stackoverflow.com/questions/24809978/calculating-the-bounding-box-of-cubic-bezier-curve
+    // https://pomax.github.io/bezierinfo/#boundingbox
     
     // canvas and mousedown related variables
     var canvas = document.getElementById("canvas");
@@ -41,6 +43,97 @@
     // save canvas size to vars b/ they're used often
     var canvasWidth = canvas.width;
     var canvasHeight = canvas.height;
+    function calculateTangentVector(P) {
+
+      const x0 = P[0].X;
+      const x1 = P[1].X;
+      const x2 = P[2].X;
+      const x3 = P[3].X;
+      const y0 = P[0].Y;
+      const y1 = P[1].Y;
+      const y2 = P[2].Y;
+      const y3 = P[3].Y;
+
+      const A = x3 - 3 * x2 + 3 * x1 - x0;
+      const B = 3 * x2 - 6 * x1 + 3 * x0;
+      const C = 3 * x1 - 3 * x0;
+      const D = x0;
+
+      const E = y3 - 3 * y2 + 3 * y1 - y0;
+      const F = 3 * y2 - 6 * y1 + 3 * y0;
+      const G = 3 * y1 - 3 * y0;
+      const H = y0;
+      for (let t = 0; t <= 1; t += 0.5)  
+      {
+        const vx = 3 * A * Math.pow(t, 2) + 2 * B * t + C;
+        const vy = 3 * E * Math.pow(t, 2) + 2 * F * t + G;
+        // console.log(vx, vy)
+        ctx.fillStyle = 'red';
+        ctx.rect(vx, vy, 1, 10);
+        ctx.fill();
+      }
+
+      
+
+      // return { x: vx, y: vy };
+    }
+
+    function getCoefficents(P){
+      calculateTangentVector(P)
+      // const x0 = P[0].X;
+      // const x1 = P[1].X;
+      // const x2 = P[2].X;
+      // const x3 = P[3].X;
+      // const y0 = P[0].Y;
+      // const y1 = P[1].Y;
+      // const y2 = P[2].Y;
+      // const y3 = P[3].Y;
+
+      // const A = x3 - 3 * x2 + 3 * x1 - x0
+      // const B = 3 * x2 - 6 * x1 + 3 * x0
+      // const C = 3 * x1 - 3 * x0
+      // const D = x0
+
+      // const E = y3 - 3 * y2 + 3 * y1 - y0
+      // const F = 3 * y2 - 6 * y1 + 3 * y0
+      // const G = 3 * y1 - 3 * y0
+      // const H = y0;
+
+      // for (let t = 0; t <= 1; t += 0.05)  
+      // {
+      //   const x = A * Math.pow(t, 3) + B * Math.pow(t, 2) + C * t + D 
+      //   const y = E * Math.pow(t, 3) + F * Math.pow(t, 2) + G * t + H 
+      //   const vx = 3 * A * Math.pow(t, 2) + 2 * B * t + C 
+      //   const vy = 3 * E * Math.pow(t, 2) + 2 * F * t + G 
+      //   // console.log(vx, vy)
+      //   ctx.fillStyle = 'red';
+      //   ctx.rect(x, y, 1, 10);
+      //   ctx.fill();
+      // }
+
+      // var a = 3 * P[3].X - 9 * P[2].X + 9 * P[1].X - 3 * P[0].X;
+      // var b = 6 * P[0].X - 12 * P[1].X + 6 * P[2].X;
+      // var c = 3 * P[1].X - 3 * P[0].X;
+
+      // var d = 3 * P[3].Y - 9 * P[2].Y + 9 * P[1].Y - 3 * P[0].Y;
+      // var e = 6 * P[0].Y - 12 * P[1].Y + 6 * P[2].Y;
+      // var f = 3 * P[1].Y - 3 * P[0].Y;
+      
+      // for (let t = 0; t <= 1; t += 0.05)  
+      // {
+      //   // const a t^2 + b t + c
+      //   const x = a * t * t + b * t + c
+      //   const y = d * t * t + e * t + f
+        
+      //   ctx.fillStyle = 'red';
+      //   ctx.rect(x, y, 1, 10);
+      //   ctx.fill();
+      // }
+      
+
+      
+      // return [A,B,C,D,E,F,G,H];
+    }
 
     // The control points
     // The control points
@@ -55,6 +148,7 @@
             {X:  35, Y: 200 }, 
             {X: 220, Y: 260 }, 
             {X: 180, Y:  40 }, ];
+        
 
     ctx.lineWidth = 6;
     ctx.strokeStyle = "#333";
@@ -111,6 +205,7 @@
         }
         ctx.stroke();
         $("#area").val(area);
+        getCoefficents(P);
     }
 
     // 找出曲线的 BB(bounding box)
