@@ -67,7 +67,7 @@ console.log(PX,PY)
   ctx.stroke();
 
   // 在曲线上选择一些点，计算每个点的切线向量并绘制
-  for (let t = 0.1; t <= 0.9; t += 0.01) {
+  for (let t = 0.1; t <= 0.9; t += 0.1) {
     const point = {x: calculateBezierPoint(t, PX), y: calculateBezierPoint(t, PY)}
     const tangentVector = calculateTangentVector(t);
 
