@@ -1,82 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <style>
-    body {
-      margin: 0;
-        background-color: ivory;
-    }
-    #canvas {
-        border:1px solid green;
-    }
-  </style>
-  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.js"></script>
-  <script src="https://cdn.bootcdn.net/ajax/libs/jqueryui/1.13.2/jquery-ui.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: ivory;
+        }
+
+        #canvas {
+            border: 1px solid green;
+        }
+    </style>
 </head>
+
 <body>
-  
+
     <canvas id="canvas" width=800 height=800></canvas>
     <script>
-      // 获取canvas和context
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
-    
-  // 定义贝塞尔曲线的控制点
-  const P = [{x: 120, y: 160 }, 
-  {x:  35, y: 200 }, 
-  {x: 220, y: 260 }, 
-  {x: 180, y:  100 }, ];
+        // 获取canvas和context
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        // 定义三次贝塞尔曲线的控制点坐标
+        var startX = 50;
+        var startY = 200;
+        var control1X = 150;
+        var control1Y = 50;
+        var control2X = 250;
+        var control2Y = 350;
+        var endX = 350;
+        var endY = 200;
 
-  // 四个点的 x
-  var PX = [P[0].x, P[1].x, P[2].x, P[3].x];
-    // 四个点的 y
-    var PY = [P[0].y, P[1].y, P[2].y, P[3].y];
-console.log(PX,PY)
-  function calculateBezierPoint(t, poly){
-    // 起点，控制点1，控制点2，终点 计算出 x 坐标
-      // x = A (1-t)^3 +3 B t (1-t)^2 + 3 C t^2 (1-t) + D t^3
-      var x = poly[0] * (1 - t) * (1 - t) * (1 - t) + 3 * poly[1] * t * (1 - t) * (1 - t) + 3 * poly[2] * t * t * (1 - t) + poly[3] * t * t * t;
-      return x;
-  }
 
-  // 计算贝塞尔曲线上某一点的切线向量
-  function calculateTangentVector(t) {
-    const n = P.length - 1;
-    const tangentVector = { x: 0, y: 0 };
+        // Minimum groover.geom library needed to use vecAt and tangentAsVec for bezier curves.
+        const geom = (() => {
+            const v1 = new Vec();
+            const v2 = new Vec();
+            const v3 = new Vec();
+            const v4 = new Vec();
+            function Vec(x, y) {
+                this.x = x;
+                this.y = y;
+            };
+            function Bezier(p1, p2, cp1, cp2) {
+                this.p1 = p1;
+                this.p2 = p2;
+                this.cp1 = cp1;
+                this.cp2 = cp2;
+            }
+            Bezier.prototype = {
+                //======================================================================================
+                // single dimension polynomials for 2nd (a,b,c) and 3rd (a,b,c,d) order bezier 
+                //======================================================================================
+                // for quadratic   f(t) = a(1-t)^2+2b(1-t)t+ct^2 
+                //                      = a+2(-a+b)t+(a-2b+c)t^2
+                // The derivative f'(t) =  2(1-t)(b-a)+2(c-b)t
+                //======================================================================================
+                // for cubic           f(t) = a(1-t)^3 + 3bt(1-t)^2 + 3c(1-t)t^2 + dt^3 
+                //                          = a+(-2a+3b)t+(2a-6b+3c)t^2+(-a+3b-3c+d)t^3
+                // The derivative     f'(t) = -3a(1-t)^2+b(3(1-t)^2-6(1-t)t)+c(6(1-t)t-3t^2) +3dt^2
+                // The 2nd derivative f"(t) = 6(1-t)(c-2b+a)+6t(d-2c+b)
+                //======================================================================================        
+                p1: undefined,
+                p2: undefined,
+                cp1: undefined,
+                cp2: undefined,
+                vecAt(position, vec) {
+                    var c;
+                    if (vec === undefined) { vec = new Vec() }
+                    if (position === 0) {
+                        vec.x = this.p1.x;
+                        vec.y = this.p1.y;
+                        return vec;
+                    } else if (position === 1) {
+                        vec.x = this.p2.x;
+                        vec.y = this.p2.y;
+                        return vec;
+                    }
 
-    for (let i = 0; i < n; i++) {
-      const coefficient = n * Math.pow(1 - t, n - 1 - i) * Math.pow(t, i);
-      tangentVector.x += coefficient * (P[i + 1].x - P[i].x);
-      tangentVector.y += coefficient * (P[i + 1].y - P[i].y);
-    }
+                    v1.x = this.p1.x;
+                    v1.y = this.p1.y;
+                    c = position;
+                    if (this.cp2 === undefined) {
+                        v2.x = this.cp1.x;
+                        v2.y = this.cp1.y;
+                        v1.x += (v2.x - v1.x) * c;
+                        v1.y += (v2.y - v1.y) * c;
+                        v2.x += (this.p2.x - v2.x) * c;
+                        v2.y += (this.p2.y - v2.y) * c;
+                        vec.x = v1.x + (v2.x - v1.x) * c;
+                        vec.y = v1.y + (v2.y - v1.y) * c;
+                        return vec;
+                    }
+                    v2.x = this.cp1.x;
+                    v2.y = this.cp1.y;
+                    v3.x = this.cp2.x;
+                    v3.y = this.cp2.y;
+                    v1.x += (v2.x - v1.x) * c;
+                    v1.y += (v2.y - v1.y) * c;
+                    v2.x += (v3.x - v2.x) * c;
+                    v2.y += (v3.y - v2.y) * c;
+                    v3.x += (this.p2.x - v3.x) * c;
+                    v3.y += (this.p2.y - v3.y) * c;
+                    v1.x += (v2.x - v1.x) * c;
+                    v1.y += (v2.y - v1.y) * c;
+                    v2.x += (v3.x - v2.x) * c;
+                    v2.y += (v3.y - v2.y) * c;
+                    vec.x = v1.x + (v2.x - v1.x) * c;
+                    vec.y = v1.y + (v2.y - v1.y) * c;
+                    return vec;
+                },
+                tangentAsVec(position, vec) {
+                    var a, b, c, u;
+                    if (vec === undefined) { vec = new Vec(); }
 
-    return tangentVector;
-  }
+                    if (this.cp2 === undefined) {
+                        a = (1 - position) * 2;
+                        b = position * 2;
+                        vec.x = a * (this.cp1.x - this.p1.x) + b * (this.p2.x - this.cp1.x);
+                        vec.y = a * (this.cp1.y - this.p1.y) + b * (this.p2.y - this.cp1.y);
+                    } else {
+                        a = (1 - position)
+                        b = 6 * a * position;        // (6*(1-t)*t)
+                        a *= 3 * a;                   // 3 * ( 1 - t) ^ 2
+                        c = 3 * position * position; // 3 * t ^ 2
+                        vec.x = -this.p1.x * a + this.cp1.x * (a - b) + this.cp2.x * (b - c) + this.p2.x * c;
+                        vec.y = -this.p1.y * a + this.cp1.y * (a - b) + this.cp2.y * (b - c) + this.p2.y * c;
+                    }
+                    u = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+                    vec.x /= u;
+                    vec.y /= u;
+                    return vec;
+                },
+            }
+            return { Vec, Bezier, }
+        })()
 
-  // 绘制贝塞尔曲线
-  ctx.beginPath();
-  ctx.moveTo(P[0].x, P[0].y);
-  for (let t = 0; t <= 1; t += 0.01) {
-    const point = {x: calculateBezierPoint(t, PX), y: calculateBezierPoint(t, PY)}
-    console.log(point)
-    ctx.lineTo(point.x, point.y);
-  }
-  ctx.stroke();
+        // this function is used to define the width of the curve
+        // It creates a smooth transition. 
+        // power changes the rate of change
+        function curve(x, power) {  // simple smooth curve x range 0-2  return value between 0 and 1
+            x = 1 - Math.abs(x - 1);
+            return Math.pow(x, power);
+        }
+        function drawLine(path, width) {
+            var steps = 30;
+            var step = 1 / steps;
+            var i = 0;
+            var pos = V(0, 0);
+            var tangent = V(0, 0);
+            var p = [];  // holds the points
+            var offset = 10;
+            // ctx.beginPath();
+            // i <= 1 + step/2 // this is to stop floating point error from missing the end value
+            for (i = 0; i <= 1 + step / 2; i += step) {
+                // 延曲线获取采样点
+                path.vecAt(i, pos);
+                // 获取采样点正切值
+                path.tangentAsVec(i, tangent);  // get tangent at that point]
+                // 根据正切值生成偏移原曲线采样点的曲线
+                // 如果把 offset 设为 0 则就是原曲线采样点
+                p.push(V(pos.x - tangent.y * offset, pos.y + tangent.x * offset)); // 上偏移点
+                p.push(V(pos.x + tangent.y * offset, pos.y - tangent.x * offset)); // 下偏移点
+            }
 
-  // 在曲线上选择一些点，计算每个点的切线向量并绘制
-  for (let t = 0.1; t <= 0.9; t += 0.1) {
-    const point = {x: calculateBezierPoint(t, PX), y: calculateBezierPoint(t, PY)}
-    const tangentVector = calculateTangentVector(t);
+            ctx.save();
+            ctx.beginPath();
+            ctx.strokeStyle = 'black'
+            ctx.lineWidth = 1;
+            for (i = 0; i < p.length - 2; i += 2) {
+                ctx.beginPath();
+                // define the path
+                ctx.lineTo(p[i].x, p[i].y);
+                ctx.lineTo(p[i + 1].x, p[i + 1].y);
+                // cover the seams
+                ctx.stroke();
+            }
+            // remove the clip
+            ctx.restore();
+        }
 
-    // 绘制切线
-    ctx.beginPath();
-    ctx.moveTo(point.x, point.y);
-    ctx.lineTo(point.x + tangentVector.x, point.y + tangentVector.y);
-    ctx.stroke();
-  }
-  </script>
+
+        var V = (x, y) => new geom.Vec(x, y);
+        // and do a cubic bezier to make sure it all works.
+        var b = new geom.Bezier(V(50, 200), V(350, 200), V(150, 50), V(250, 350),);
+        ctx.beginPath();
+        ctx.strokeStyle = 'red'
+        ctx.moveTo(50, 200);
+        ctx.bezierCurveTo(150, 50, 250, 350, 350, 200);
+        ctx.stroke();
+        drawLine(b, 10);
+    </script>
 </body>
+
 </html>

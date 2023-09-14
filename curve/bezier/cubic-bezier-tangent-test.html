@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: ivory;
+    }
+
+    #canvas {
+      border: 1px solid green;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width=800 height=800></canvas>
+  <script>
+    // 获取canvas和context
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    // 三次贝塞尔曲线控制点
+    const points = [
+      { x: 120, y: 160 },
+      { x: 35, y: 200 },
+      { x: 220, y: 260 },
+      { x: 180, y: 40 },
+    ];
+
+    // 用 canvas api 正常绘制一条三次贝塞尔曲线
+    ctx.beginPath();
+    ctx.strokeStyle = 'green'
+    ctx.moveTo(points[0].x, points[0].y);
+    ctx.bezierCurveTo(points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
+    ctx.stroke();
+
+    const draw = () => {
+      // 通过四个控制点计算出 A..H
+      const x0 = points[0].x;
+      const x1 = points[1].x;
+      const x2 = points[2].x;
+      const x3 = points[3].x;
+      const y0 = points[0].y;
+      const y1 = points[1].y;
+      const y2 = points[2].y;
+      const y3 = points[3].y;
+
+      const A = x3 - 3 * x2 + 3 * x1 - x0
+      const B = 3 * x2 - 6 * x1 + 3 * x0
+      const C = 3 * x1 - 3 * x0
+      const D = x0
+
+      const E = y3 - 3 * y2 + 3 * y1 - y0
+      const F = 3 * y2 - 6 * y1 + 3 * y0
+      const G = 3 * y1 - 3 * y0
+      const H = y0;
+
+      ctx.strokeStyle = "#f00";
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+
+      for (let t = 0; t < 1; t += 0.02) {
+        // 用 t 获取“样条曲线” 采样点
+        let Sx = A * Math.pow(t, 3) + B * Math.pow(t, 2) + C * t + D
+        let Sy = E * Math.pow(t, 3) + F * Math.pow(t, 2) + G * t + H
+
+        // 绘制位置移到采样点
+        ctx.moveTo(Sx, Sy);
+
+        // 计算(求导)曲线上采样点的切线向量
+        let Tx = 3 * A * Math.pow(t, 2) + 2 * B * Math.pow(t, 2) + C
+        let Ty = 3 * E * Math.pow(t, 2) + 2 * F * Math.pow(t, 2) + G
+        // rotate 90 or 270 degrees to make it a perpendicular
+        // 旋转 90 度或 270 度垂直于曲线采样点
+        let Px = Ty
+        let Py = - Tx
+        // 缩至单位向量
+        let magnitude = Math.sqrt(Px * Px + Py * Py)
+        Px = Px / magnitude
+        Py = Py / magnitude
+        // 向量扩大 10 个单位
+        Px *= 10;
+        Py *= 10;
+        // 从采样点连接至切线向量偏移位置
+        ctx.lineTo(Sx + Px, Sy + Py);
+      }
+      ctx.stroke();
+    }
+    draw();
+  </script>
+</body>
+
+</html>

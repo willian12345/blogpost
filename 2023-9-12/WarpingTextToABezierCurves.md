@@ -1,5 +1,12 @@
 # Warping Text to a Bézier curves
 
+
+http://www.planetclegg.com/projects/WarpingTextToSplines.html
+
+https://csswarp.eleqtriq.com/
+
+svg textPath
+
 # 延贝塞尔曲线排列文本
 
 ## Background
@@ -97,7 +104,7 @@ What about adding text to a GraphicsPath? Once again, it reduces to a bunch of p
 
 比较好的一件事是在 GraphicsPath 内一堆绘制，可通过迭代获取内部用于绘制的完整的描述信息。
 
-有了这些元信息就可重建这条路径。在处理过程中，这些点可用一些形变操作达到文本包裹效果。
+有了这些元信息就可重建这条路径。在处理过程中，这些点可用一些形变操作达到文本缠绕效果。
 
 
 ![image](./images//PathTextPoints.png)
@@ -269,7 +276,7 @@ One other interesting thing to note is that even though the values for t used va
 
 另一件值得关注的有趣的点是，尽管 t 的增长是定值的，根据它们处在曲线的位置,一些点却比另一些靠的更近。
 
-任意两个连续的点与其它任意两个点之间可能拥有不同的 “arc-lengths” (延曲线测量长度，而不是直线距离)。
+任意两个连续的点与其它任意两个点之间可能拥有不同的弧长 “arc-lengths” (延曲线测量长度，而不是直线距离)。
 
 可以把它想像成延曲线 “提速” 和 “减速” 时 rate 速率不同，这有助于帮助理解，尽管 t 值的增长是固定的。稍后还会再讨论这点
 
@@ -332,19 +339,336 @@ y = y / magnitude
 
 That covers most of the math needed to make a first pass at warping text onto a Bézier curve. 
 
-对于首次接触使用贝塞尔曲线包裹文本来说，这点数学知识足够了
+对于首次接触使用贝塞尔曲线缠绕文本来说，这点数学知识足够了
+
+## First attempt: Stretchy Text
+
+Here is a first try at warping text, given Bézier control points P0..P3, and a graphics context g to draw on: 
+
+## 首试：伸缩文本
+
+在缠绕文本上首次尝试，给定贝塞尔控制点 P0..P3，还有图形上下文 g 绘制：
+
+```
+string text = "Some text to wrap";
+
+[[ Calculate coefficients A thru H from the control points ]]
+
+GraphicsPath textPath = new GraphicsPath();
+
+// the baseline should start at 0,0, so the next line is not quite correct
+path.AddString(text, someFont, someStyle, someFontSize, new Point(0,0));
+
+RectangleF textBounds = textPath.GetBounds();
+ 
+for (int i =0; i < textPath.PathPoints.Length; i++)
+{
+    PointF pt = textPath.PathPoints[i];
+    float textX = pt.X;
+    float textY = pt.Y;
+    
+    // normalize the x coordinate into the parameterized value
+    // with a domain between 0 and 1.
+    float t =  textX / textBounds.Width;  
+       
+    // calculate spline point for parameter t
+    float Sx = At3 + Bt2 + Ct + D 
+    float Sy = Et3 + Ft2 + Gt + H 
+        
+    // calculate the tangent vector for the point        
+    float Tx = 3At2 + 2Bt + C 
+    float Ty = 3Et2 + 2Ft + G 
+    // rotate 90 or 270 degrees to make it a perpendicular
+    float Px =   Ty
+    float Py = - Tx
+    
+    // normalize the perpendicular into a unit vector
+    float magnitude = sqrt(Px2 + Py2)
+    Px = Px / magnitude
+    Py = Py / magnitude
+    
+    // assume that input text point y coord is the "height" or 
+    // distance from the spline.  Multiply the perpendicular vector 
+    // with y. it becomes the new magnitude of the vector.
+    Px *= textY;
+    Py *= textY;
+    
+    // translate the spline point using the resultant vector
+    float finalX = Px + Sx
+    float finalY = Py + Sy
+    
+    // I wish it were this easy, actually need 
+    // to create a new path.
+    textPath.PathPoints[i] = new PointF(finalX, finalY);
+}
+
+// draw the transformed text path		
+g.DrawPath(Pens.Black, textPath);
+
+// draw the Bézier for reference
+g.DrawBezier(Pens.Black, P0,  P1,  P2,  P3);
+```
+
+![image](./images/RawWrappedText1.png)
+
+Output of pseudocode, with control points added 
+用控制点伪代码生成的结果
+
+Looks pretty good, but there are a few problems. The text appears scrunched together in the middle, and stretched out on the ends. Remember that the arc-length between points can vary, even if t is incremented by a fixed amount. I'll add some points using an fixed increment for t, and overlay direction vectors to show how they were used to warp the text: 
+
+看起来不错，但还存在一些问题。文本中间挤在一起了，边上又比较松散。牢记 arc-length 在点之间是变化的，即便 t 增加是定死的。
+
+我将通过 定增的 t 添加一些点，并盖在方向向量上用于显示它们是如何用于缠绕文本的：
+
+![image](./images/RawWrappedText2.png)
+Illustrating that the formula for a Bézier is not
+arc-length parameterized, and the problem this creates. 
+如图贝塞尔的公式 arc-length 是非参数化的，问题就在于此。
+
+As the parameter t varies by a fixed amount, the output points have varying arc-lengths from one to the next. This characteristic of the Bézier formula is what causes the text to be compressed or stretched along the curve.
+
+There is another problem with the algorithm: text is always stretched or compressed to fit the length of the curve, as shown below: 
 
 
+当参数 t 定增时，计算得出的前后点之间 arc-lengths 是变化的。
+
+贝塞尔的公式的这一特点，导致了文本在曲线上产生挤压或拉伸的效果。
+
+此外算法还有另一个问题：文本总是被挤压或拉伸， 如下所示：
+
+![image](./images/SquashedWrappedText2.png)
+Text squashed to fit because of directly mapping its width to the domain of t (0..1) 
+由于直接从0..1范围映射文本被挤压
+
+![image](./images/StretchedWrappedText2.png)
+Text stretched to fit because of directly mapping its width to the domain of t (0..1) 
+由于直接从0..1范围映射文本被拉伸
+
+What would be better is to map the text's x coordinate to the parameter t in such a way that the text does not try to exactly fit the text to the full length of the Bézier. In order to do that, the arc-length of the curve must be known. This problem is related to the first one. 
+
+我们期望更好的效果是参数 t 映射至文本 x 轴坐标不要试图将文本填满完整的贝塞尔曲线。为了实现这一目的， 曲线的 弧长 必须是已知的。问题又回到了起点。
+
+## Fixing the text length problem (and how long is that Bézier, anyway)
+
+The fix to the second problem (total text length) is trivial, if the arc-length of the curve is known. Rather than map the actual width of the text from 0..1 for t, the text can be drawn into a bounding box that is the same width as the arc-length of the spline, then x coordinates of the box are scaled to 0..1 by dividing all x coordinates by the arc-length. This is a little easier to understand visually: 
+
+## 解决文本长度问题（计算贝塞尔曲线长度）
+
+解决提出的第二点问题（文本长度）比较简单，如果曲线的 弧长已知。
+
+相比于映射文本真实宽度 0..1 对应到 t ，文本可以先绘制进“边界盒”（译者注：通常图形计算中的 AABB 中的 BB），边界盒的宽度是样条曲线的 弧长， 然后盒子的 x 坐标通过除以所有 弧长 的 x 坐标值后被缩放至 0..1。看图更容易理解：
+
+![image](./images/FixatingTextBoxToSplineLength.png)
+Bézier above has an arc-length of 500 units, so a 500 unit wide bounding box
+(shown at top in blue) is used for text, and scaled to the domain of 0..1.
+Bounding box is shown as it would look if it were somehow wrapped to the curve.
+上图的贝塞尔曲线 arc-length 为 500 个单位，即边界盒的宽度也要 500 个单位（上半部分蓝色的）是为文本准备的，并缩放到 0..1 范围。
+边界盒就像则以某种方式缠绕到了曲线上
+
+The text can also be clipped to the bounding box to prevent it from overrunning the end of the spline.
+
+That leaves the problem of calculating the arc-length of a cubic Bézier curve. After doing some research, I discovered that there is apparently no closed form solution to this problem. There are a number of ways of approximating the arc-length, some involving moderately complex calculus. Even the most sophisticated and accurate solutions involve an iterative approach. (See resources for more info).
+
+However, there is a very simple way to estimate the arc-length: divide the curve into a bunch of line segments based on a fixed increment for t, then sum the straight-line length of those line segments. It turns out that even a small number of divisions can give a fairly good estimate, as it exploits a characteristic of the Bézier formula that the output points are close together in sharp curves. Some empirical investigation showed that around 100 divisions would yield estimates with less than .001 error, which would be half a pixel for a 500 pixel long curve. Close enough for the purpose at hand.
+
+The process can be visualized by drawing the line segments on top of a Bézier: 
 
 
+在样条曲线上超出边界框部分的文本会被剪除掉。
+
+然后，遗留的问题就剩如何计算贝塞尔曲线的 弧长了。在经过一翻研究后，我发现很明显没有一个标准的解决方案。
+
+模拟 弧长的方法非常多，有一些解决方案涉及中等复杂度的微积分。而且最复杂和最精确的解决方案涉及迭代逼近法。
+
+然而，有一种非常简单的估算 弧长方法：基于定增的 t 将曲线分割成一堆线段，然后统计所有线段的长度。它产生的结果是分割的越小，得到的模拟估算越准，它运用了贝塞尔曲线的特征输出点靠的越近曲线越平滑。
+
+一些经验调查表明大约 100 份的分割仅会产生小于 0.001 的估算错误，这仅是 500 像素长的曲线的一半。用于我们手头的这点儿活来说精度足够了。
 
 
+处理过程可以被可视化成在贝塞尔曲线上面画多条线段：
+
+![image](./images/ApproxArcLength1.png)
+Estimating arc-length with four divisions.
+segments shown in blue have large error.
+用蓝色的 4 段线去估算弧长精度不够
+
+![image](./images/ApproxArcLength2.png)
+With eight divisions, segments start to converge
+on the curve, estimation error is smaller.
+用 8 段的话精度就高多了
 
 
+The pseudocode for this is very simple. There are a few optimizations that can be made, but the basic algorithm is fairly efficient as long as the number of divisions is not too large. 
+
+伪代码非常简单。有许多可优化之处，但基础的算法足够高效了，只要分割数不要太大。
+
+```
+int numberOfDivisions = 100;
+int maxPoint = numberOfDivisions + 1;
+
+// _formula.GetPoint(t) 通过 t 获取点坐标
+// 点通过贝塞尔公式计算
+
+PointF previousPoint = _formula.GetPoint(0);  // 曲线起点
+
+float sum = 0;
+
+for (int i = 1; i <= maxPoint; i++)
+{
+    PointF p = _formula.GetPoint( i / (float) maxPoint );
+    sum += distance(previousPoint, p);
+    previousPoint = p;
+}
+
+// 计算两点距离的方法:
+float distance(PointF a, PointF b) { return sqrt( (bx - ax)2 + (by - ay)2 ); }
+```
+
+This code could easily be generalized for any single-valued parameterized algorithm that is continuous, has a fixed domain, and returns points, such as the formula for an ellipse or different types of splines.
+
+It may be possible to estimate the error and dynamically pick an "ideal" number of divisions. This could be done by subdividing until segment lengths are below some threshold or by comparing the tangents of the line segments to the tangents of the curve, but I have not explored either of these ideas. Fixing the number of divisions at around 100 seems to work well enough for the purpose at hand. 
+
+该代码可以很容易地被通用化到任何连续的单值参数化算法，它拥有固定的范围，返回多个点，比如椭圆公式或其它不同类型的样条曲线。
+
+估算误差并动态地选择一个“理想的”除数是可能的。这可以通过细分来完成，直到线段长度低于某个阈值，或者通过比较线段的切线和曲线的切线，但我没有探索这两种想法。
+
+我用固定数 100 似乎对当前的目的足够有效。
+
+## Arc-length parameterization
+
+Even after the text width problem is fixed, there is still an issue with text getting squashed or stretched due to the non-uniform arc-lengths between uniform values of t. 
+
+## 弧长参数化
+
+即使文本宽度问题解决后，由于在标准化 t 值之间弧长还没有被标准化 文本被挤压和拉伸的问题还是存在。
 
 
+![image](./images/BeforeArcLengthParam.png)
+This graphic illustrates that the lack of arc-length parameterization.
+This issue is independent of the other problem, but has a related solution.
+(Perpendicular vectors rotated 180° so they are not obscured) 
+该图说明了弧长参数化的缺乏。这个问题独立于另一个问题，但有一个相关的解决方案。
+(垂直矢量旋转了180°，因此不会被遮挡)
+
+ The solution to this problem is called arc-length parameterization. The idea is to map an input value u to a value t which can be passed to the Bézier formula, and will produce points that have uniform arc-length distances for uniform values of u. Stated another way, for values 0..1 for u it would map to values of t in such a way to produce a point that is a fractional arc-length distance from the start of the curve equal to u. For example, a value of .25 for u would always produce a point that is one-fourth of the arc-length distance along the curve. The intermediate value of t in this case is unknown, and must be calculated by the mapping function somehow.
+
+The implementation I came up with (based on suggestions from friend who is much more mathematically inclined than I) was to approximate this mapping function using a table of arc-lengths. It consists of saving a list of the sums produced by the arc-length algorithm already covered. For a spline having an arc-length of 500, divided into 100 divisions, the table might for a certain spline might look like this:
+
+解决该问题的方法被称为孤长参数化。其思想是将一个输入值 u 映射到贝塞尔公式的参数 t 上，并且将产生对于 u 一样标准化的等距弧长的点。
+
+换句话说，若 u 的值是 0..1 ，它将映射到 t 的值，通过此方法产生的某个点值就是弧长距离起点的某个分数值。
+
+举个例子，u 值如果为  0.25 , 它将总是会返回整条曲线弧长距离的 1/4。在此例中中间值 t 还是未知，必须通过某种映射方法计算得到。
+
+我使用的实现方法（基于数学比我更好的朋友的建议）是 用一张孤长表近似。它保存了我们已讨论过的孤长公式计算的所有弧长。如果某条曲线弧长为 500，分为 100 份，表格将会显示如下：
+
+```
+  0.0
+  5.2
+ 10.5
+ 15.7 
+ ... (more points) ...
+494.8
+500.0
+```
+
+The index of values in this table equates to some parameter t, for example, if the list contained 101 values, index 0 contains the arc-length for t=0.0, index 100 has the arc-length for t=1.0, and index 50 contains the arc-length for t=.5. If the table were stored in a 0-indexed array called arcLengths, the value of t for a given index would be: 
+
+值索引对应参数 t 的某个值，如果列表包含了 101 个值，索引 0 包含了 t = 0.0 时的弧长， 索引 100 对应了 t=1.0 时孤长， 索引 50 对应了 t=0.5 时孤长。
+
+如果表被存放在了名为 arcLength 的数组中，索引对应的 t 值即：
+
+```
+t = index / (float) (arcLengths.Length - 1)
+```
+
+Given such a table, it is possible to find values of t that are close to a desired arc-length. So we could take and input value of u, calculate the desired arcLength (u * totalArcLength), then find the index of the largest entry in the table that is smaller than or equal to the desired arcLength. This could be done using a brute force traversal, or preferably, a binary search. If this value happens to be equal to the arcLength, then the value of t for the input value of u can be calculated as previously described. More often then not, the search will find the largest value that is smaller than the desired arc-length. In this case, linear interpolation can be used between the found entry and the next one to find an estimate for t. Assuming sufficient divisions were used to create the table, the distance between those to points will be sufficiently small that the error for the mapping will be negligible.
+
+The following pseudocode demonstrates the technique: 
+
+有了这样一张表格，找到 t 对应的孤长就成为了可能。通过获取输入值 u ， 计算期望的弧长( u * totalArcLength)，然后在表中找到输入值对应的最大值，值大小于等于希望的弧长。可以用简单的遍历或更好的二分搜索。
+
+如果恰好值等于弧长，输入值 u 对应的 t 值可以按之前那样算。通常情况下，找到的最大值会小于期望的弧长。在这种情况下，线性插值被用于输入值与下一个值之间估算 t 值。
+
+假设使用了足够大的除数来创建表，那么这些点之间的距离将足够小，映射的误差可以忽略不计
+
+以下的伪代码将演示这项技术：
+
+```
+float u = // 参数值 u , 范围 0 到 1 之间
+float t; // 通过 u 要寻找的 t
+
+float [] _arcLengths = // 预先计算好的贝塞尔曲线弧长列表
+
+// u 对应的目标弧长
+float targetArcLength = u * _arcLengths[ _arcLengths.Length - 1 ];
+
+// 二分搜索
+int index = IndexOfLargestValueSmallerThan(_arcLengths, targetArcLength)
+
+// 如果精确匹配，返回基于精确 index 的 t
+if (_arcLengths[index] == targetArcLength)
+{
+    t = index / (float) (arcLengths.Length - 1);
+}
+else  // 否则需要在两个点之间插值
+{
+    float lengthBefore = _arcLengths[index];
+    float lengthAfter = _arcLengths[index+1];
+    float segmentLength = lengthAfter - lengthBefore; // 两个点之间的距离
+
+    // 决定在“前”和“后”点之间的位置
+    float segmentFraction = (targetLength - lengthBefore) / segmentLength;
+                          
+    // add that fractional amount to t 
+    // 加上额外的这部分分数 segmentFraction 给 t
+    t = (index + segmentFraction) / (float) (_arcLengths.Length -1);
+}
+```
 
 
+The basic algorithm can be generalized to arc-length parameterize the same class of functions that can be handled by the arc-length estimation code. The output, when using this mapping algorithm, is much more appealing: 
+
+这个基本算法可以封装成通用的类用于处理弧长估算。以下就是使用此映射算法生成的图，表现好多了:
+
+![image](./images/AfterArcLengthParam.png)
+After arc-length parameterization. Note the uniform values
+for u (plotted in blue) are now evenly distributed on the curve.
+(Perpendicular vectors shown rotated 180° so they are not obscured) 
+
+在弧长参数化后，注意标准化 u (标成蓝色的)现已均分在曲线上。（垂直向量旋转了 180 度以不被遮挡）
+
+Solving other minor issues
+
+The algorithms presented still may have some minor issues. In particular, long horizontal line segments may cause the characters to distort when going around a sharp curve. This problem can be overcome in all but the most severe cases by iterating through the text path and dividing long line segments into shorter ones. 
 
 
+![image](./images/BendingLongLines.png)
+The T's have a single line for the top, so it can't
+bend, causing gross distortions in sharp curves
 
+![image](./images/BendingShortLines.png)
+Dividing long lines into sufficiently
+shorter segments can improve appearance,
+at some expense to performance. 
+
+
+In some cases, this technique can benefit from using short Bézier curves instead of short line segments. However, it is not enough to simply replace all line segments with Bézier curves, as this gives a different and sometimes unpleasant appearance for long segments. It is left as an exercise to the reader to find out why. 
+
+
+## Extending the techniques to complex paths
+
+The techniques can easily be expanded to allow for warping to arbitrary paths of increasing complexity. All that need be done is calculate the arc-length of the entire path (by summing the arc-lengths of its components), and then parameterize the whole thing. A wrapper class for the formula can be written which contains multiple sub-paths as children, and could decide which child to use for a particular parameter through reverse interpolation over the total length. Alternatively this could be built into the arc-length estimation algorithm.
+
+One could even wrap text around other text! 
+
+![image](./images/TextWarpedToTextPath.png)
+Wrapping text around an arbitrary path. 
+
+
+This potentially introduces new problems to solve, particularly for warping around other text paths. Discontinuities (places where the path stops at one place and restarts elsewhere), can cause severe 'garbling' if a character or other object straddles those points. A good general algorithm would need to account for these, and make sure that they are handled appropriately, perhaps by pushing the characters beyond the break. Also, many characters contain acute bends and corners that may result in excessive warping that looks unpleasant (as seen in a few places in the figure above). 
+
+
+Conclusion
+
+The use of these techniques for distorting text (or any path!) can give a fairly natural and fluid appearance. The algorithms presented allow for real time manipulation of the curves, even on low-end modern hardware. Several optimizations can be made that were not covered in this article for the sake of simplicity. The techniques can be readily adapted to any graphics framework that has a vector path object (such as WPF, Cocoa, Postscript, etc). Subtle use of warped vector paths can be used for fun aesthetic effects. 
