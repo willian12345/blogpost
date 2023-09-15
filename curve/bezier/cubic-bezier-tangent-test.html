@@ -62,12 +62,12 @@
       ctx.strokeStyle = "#f00";
       ctx.beginPath();
       ctx.moveTo(x0, y0);
+    
 
       for (let t = 0; t < 1; t += 0.02) {
         // 用 t 获取“样条曲线” 采样点
         let Sx = A * Math.pow(t, 3) + B * Math.pow(t, 2) + C * t + D
         let Sy = E * Math.pow(t, 3) + F * Math.pow(t, 2) + G * t + H
-
         // 绘制位置移到采样点
         ctx.moveTo(Sx, Sy);
 

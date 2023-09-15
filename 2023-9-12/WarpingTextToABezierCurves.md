@@ -7,7 +7,7 @@ https://csswarp.eleqtriq.com/
 
 svg textPath
 
-# 延贝塞尔曲线排列文本
+# 贝塞尔曲线文字路径
 
 ## Background
 
@@ -638,22 +638,33 @@ for u (plotted in blue) are now evenly distributed on the curve.
 
 在弧长参数化后，注意标准化 u (标成蓝色的)现已均分在曲线上。（垂直向量旋转了 180 度以不被遮挡）
 
-Solving other minor issues
+## Solving other minor issues
 
 The algorithms presented still may have some minor issues. In particular, long horizontal line segments may cause the characters to distort when going around a sharp curve. This problem can be overcome in all but the most severe cases by iterating through the text path and dividing long line segments into shorter ones. 
+
+## 解决其它一些小问题
+
+此算法仍然不完美。尤其是在长的水平线段在环绕在比较尖的曲线时字符会产生扭曲。除了最严重的情况外，这个问题可以通过迭代文本路径时将长线段分成更短的线段来解决。
 
 
 ![image](./images/BendingLongLines.png)
 The T's have a single line for the top, so it can't
 bend, causing gross distortions in sharp curves
+字母 'T' 顶部有一条单独的横线，由于它处在比较尖的曲线部分它未能弯曲，
+
 
 ![image](./images/BendingShortLines.png)
 Dividing long lines into sufficiently
 shorter segments can improve appearance,
 at some expense to performance. 
+将线段分割成足够的小牺牲一部分性能的情况下可以改善显示效果
 
 
 In some cases, this technique can benefit from using short Bézier curves instead of short line segments. However, it is not enough to simply replace all line segments with Bézier curves, as this gives a different and sometimes unpleasant appearance for long segments. It is left as an exercise to the reader to find out why. 
+
+在一些例子中，这项技术可以从使用较短的贝塞尔曲线代替长的贝塞尔曲线中受益。然而，简单的使用贝塞尔曲线替换所有的线段是不够的，一些长线段上使用效果并不太好。
+
+这就作为练习留给读者去寻找答案了
 
 
 ## Extending the techniques to complex paths
@@ -662,13 +673,28 @@ The techniques can easily be expanded to allow for warping to arbitrary paths of
 
 One could even wrap text around other text! 
 
+## 扩展至更复杂的路径
+
+此项技术可以很简单的扩展到更复杂的任意路径。所要做的就是计算整条路径的弧长(通过累计所有部分的弧长)，并全部参数化。
+
+可将公式封装成类，其包含了多种子路径，并可以通过对总长度的反向插值来决定对特定参数使用哪个子路径，或者可以集成到弧长估算公式内。
+
+
 ![image](./images/TextWarpedToTextPath.png)
 Wrapping text around an arbitrary path. 
-
+文字在任意路径上的缠绕效果
 
 This potentially introduces new problems to solve, particularly for warping around other text paths. Discontinuities (places where the path stops at one place and restarts elsewhere), can cause severe 'garbling' if a character or other object straddles those points. A good general algorithm would need to account for these, and make sure that they are handled appropriately, perhaps by pushing the characters beyond the break. Also, many characters contain acute bends and corners that may result in excessive warping that looks unpleasant (as seen in a few places in the figure above). 
+
+这产生了一个潜在的新问题，特别是文本缠绕在另一个文本路径上。断点（路径停止点并重新开始往另外一处），如果字符或其它对象跨越这些点可能引起严重的错乱。
+
+一个通用的算法需要考虑到这些，并且确保以合适方式处理这些问题，比如将字母推过这些断点处。很多字符包含了锐角弯曲和看起来效果不怎么好的过度包裹的边角（如上图所示）也得要处理
 
 
 Conclusion
 
 The use of these techniques for distorting text (or any path!) can give a fairly natural and fluid appearance. The algorithms presented allow for real time manipulation of the curves, even on low-end modern hardware. Several optimizations can be made that were not covered in this article for the sake of simplicity. The techniques can be readily adapted to any graphics framework that has a vector path object (such as WPF, Cocoa, Postscript, etc). Subtle use of warped vector paths can be used for fun aesthetic effects. 
+
+## 总结
+
+此项扭曲文本（任意路径）的技术能得到相对自然流畅的显示效果。此算法允许曲线可以被实时计算表示，即使是在低端的现代硬件上。为了简化讲解，许多优化手段在此文中没有讨论。此技术可轻易的适用于任何拥有向量路径对象的图形框架(比如WPF，Cocoa,Postscript, 等)。巧妙的使用扭曲的矢量路径可以用于有趣的美学效果
