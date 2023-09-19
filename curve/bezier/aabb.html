@@ -7,165 +7,52 @@
   <style>
     body {
       margin: 0;
-        background-color: ivory;
-    }
-    #canvas {
-        border:1px solid green;
+      padding: 0;    
     }
   </style>
-  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.js"></script>
-  <script src="https://cdn.bootcdn.net/ajax/libs/jqueryui/1.13.2/jquery-ui.js"></script>
 </head>
 <body>
-  
   <canvas id="canvas" width=400 height=300></canvas>
-  <br/>Num point:
-  <input id="nPts" name="sang" value="5" size="5" />
-  <br/>
-  <input id="goBut" type="button" value="Go" />Area:
-  <input id="area" name="sang" value="5" size="5" />
   <script>
     // 参考资料
     // https://floris.briolas.nl/floris/2009/10/bounding-box-of-cubic-bezier/
     // https://stackoverflow.com/questions/24809978/calculating-the-bounding-box-of-cubic-bezier-curve
     // https://pomax.github.io/bezierinfo/#boundingbox
     
-    // canvas and mousedown related variables
     var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");
-    var $canvas = $("#canvas");
-    var canvasOffset = $canvas.offset();
-    var offsetX = canvasOffset.left;
-    var offsetY = canvasOffset.top;
-    var scrollX = $canvas.scrollLeft();
-    var scrollY = $canvas.scrollTop();
+    var ctx = canvas.getContext("2d");    
 
-    // save canvas size to vars b/ they're used often
-    var canvasWidth = canvas.width;
-    var canvasHeight = canvas.height;
-    function calculateTangentVector(P) {
-
-      const x0 = P[0].X;
-      const x1 = P[1].X;
-      const x2 = P[2].X;
-      const x3 = P[3].X;
-      const y0 = P[0].Y;
-      const y1 = P[1].Y;
-      const y2 = P[2].Y;
-      const y3 = P[3].Y;
-
-      const A = x3 - 3 * x2 + 3 * x1 - x0;
-      const B = 3 * x2 - 6 * x1 + 3 * x0;
-      const C = 3 * x1 - 3 * x0;
-      const D = x0;
-
-      const E = y3 - 3 * y2 + 3 * y1 - y0;
-      const F = 3 * y2 - 6 * y1 + 3 * y0;
-      const G = 3 * y1 - 3 * y0;
-      const H = y0;
-      for (let t = 0; t <= 1; t += 0.5)  
-      {
-        const vx = 3 * A * Math.pow(t, 2) + 2 * B * t + C;
-        const vy = 3 * E * Math.pow(t, 2) + 2 * F * t + G;
-        // console.log(vx, vy)
-        ctx.fillStyle = 'red';
-        ctx.rect(vx, vy, 1, 10);
-        ctx.fill();
-      }
-
-      
-
-      // return { x: vx, y: vy };
-    }
-
-    function getCoefficents(P){
-      calculateTangentVector(P)
-      // const x0 = P[0].X;
-      // const x1 = P[1].X;
-      // const x2 = P[2].X;
-      // const x3 = P[3].X;
-      // const y0 = P[0].Y;
-      // const y1 = P[1].Y;
-      // const y2 = P[2].Y;
-      // const y3 = P[3].Y;
-
-      // const A = x3 - 3 * x2 + 3 * x1 - x0
-      // const B = 3 * x2 - 6 * x1 + 3 * x0
-      // const C = 3 * x1 - 3 * x0
-      // const D = x0
-
-      // const E = y3 - 3 * y2 + 3 * y1 - y0
-      // const F = 3 * y2 - 6 * y1 + 3 * y0
-      // const G = 3 * y1 - 3 * y0
-      // const H = y0;
-
-      // for (let t = 0; t <= 1; t += 0.05)  
-      // {
-      //   const x = A * Math.pow(t, 3) + B * Math.pow(t, 2) + C * t + D 
-      //   const y = E * Math.pow(t, 3) + F * Math.pow(t, 2) + G * t + H 
-      //   const vx = 3 * A * Math.pow(t, 2) + 2 * B * t + C 
-      //   const vy = 3 * E * Math.pow(t, 2) + 2 * F * t + G 
-      //   // console.log(vx, vy)
-      //   ctx.fillStyle = 'red';
-      //   ctx.rect(x, y, 1, 10);
-      //   ctx.fill();
-      // }
-
-      // var a = 3 * P[3].X - 9 * P[2].X + 9 * P[1].X - 3 * P[0].X;
-      // var b = 6 * P[0].X - 12 * P[1].X + 6 * P[2].X;
-      // var c = 3 * P[1].X - 3 * P[0].X;
-
-      // var d = 3 * P[3].Y - 9 * P[2].Y + 9 * P[1].Y - 3 * P[0].Y;
-      // var e = 6 * P[0].Y - 12 * P[1].Y + 6 * P[2].Y;
-      // var f = 3 * P[1].Y - 3 * P[0].Y;
-      
-      // for (let t = 0; t <= 1; t += 0.05)  
-      // {
-      //   // const a t^2 + b t + c
-      //   const x = a * t * t + b * t + c
-      //   const y = d * t * t + e * t + f
-        
-      //   ctx.fillStyle = 'red';
-      //   ctx.rect(x, y, 1, 10);
-      //   ctx.fill();
-      // }
-      
-
-      
-      // return [A,B,C,D,E,F,G,H];
-    }
-
-    // The control points
-    // The control points
-    //var P = [{X:  13, Y: 224 }, 
-    //         {X: 150, Y: 100 }, 
-    //         {X: 251, Y:  93 }, 
-    //         {X: 341, Y: 224 }, ];
+    // 四个点
+    //var points = [{x:  13, y: 224 }, 
+    //         {x: 150, y: 100 }, 
+    //         {x: 251, y:  93 }, 
+    //         {x: 341, y: 224 }, ];
 
     // 绘制正常贝塞尔曲线
     // 四个点：起点，控制点1，控制点2，终点
-    var P = [{X: 120, Y: 160 }, 
-            {X:  35, Y: 200 }, 
-            {X: 220, Y: 260 }, 
-            {X: 180, Y:  40 }, ];
+    var points = [{x: 120, y: 160 }, 
+            {x:  35, y: 200 }, 
+            {x: 220, y: 260 }, 
+            {x: 180, y:  40 }, ];
         
 
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 1;
     ctx.strokeStyle = "#333";
     ctx.beginPath();
-    ctx.moveTo(P[0].X, P[0].Y);
-    ctx.bezierCurveTo(P[1].X, P[1].Y, P[2].X, P[2].Y, P[3].X, P[3].Y);
+    ctx.moveTo(points[0].x, points[0].y);
+    ctx.bezierCurveTo(points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
     ctx.stroke();
 
-    // 绘制控制点拆线
-    // draw the control polygon
+    // 画出控制点折线
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(P[0].X, P[0].Y);
-    ctx.lineTo(P[1].X, P[1].Y);
-    ctx.lineTo(P[2].X, P[2].Y);
-    ctx.lineTo(P[3].X, P[3].Y);
+    ctx.setLineDash([2, 4]);
+    ctx.moveTo(points[0].x, points[0].y);
+    ctx.lineTo(points[1].x, points[1].y);
+    ctx.lineTo(points[2].x, points[2].y);
+    ctx.lineTo(points[3].x, points[3].y);
     ctx.stroke();
+
 
     // 根据传入的 poly 四个控制点，和 t 值计算出具体的坐标值
     function evalBez(poly, t) {
@@ -176,36 +63,135 @@
     }
 
     // 四个点的 x
-    var PX = [P[0].X, P[1].X, P[2].X, P[3].X];
+    var pointXArray = [points[0].x, points[1].x, points[2].x, points[3].x];
     // 四个点的 y
-    var PY = [P[0].Y, P[1].Y, P[2].Y, P[3].Y];
+    var pointYArray = [points[0].y, points[1].y, points[2].y, points[3].y];
+
+
+    function getABC(axis){
+      var a = 3 * points[3][axis] - 9 * points[2][axis] + 9 * points[1][axis] - 3 * points[0][axis];
+      var b = 6 * points[0][axis] - 12 * points[1][axis] + 6 * points[2][axis];
+      var c = 3 * points[1][axis] - 3 * points[0][axis];
+      return [a,b,c]
+    }
+
+    function getXRange (points){
+        var a = 3 * points[3].x - 9 * points[2].x + 9 * points[1].x - 3 * points[0].x;
+        var b = 6 * points[0].x - 12 * points[1].x + 6 * points[2].x;
+        var c = 3 * points[1].x - 3 * points[0].x;
+
+        /**
+          
+          可用求根公式
+          - b +/- sqrt(b^2-4 a c)
+          -----------------------
+                  2 a
+          解方程可得 两个解（根） t0,t1, 无解，或 1 个解
+
+          我们只关心 0 <= t <= 1 的情况
+
+          这就有了四个点的极值，起点，终点，和两个解
+        */
+        
+        // 先处理 X 轴
+         
+        // delta 判断 b^2-4ac
+        var disc = b * b - 4 * a * c;
+        // xl：x 最小值
+        // xh：x 最大值
+        var xl = points[0].x;
+        var xh = points[0].x;
+        if (points[3].x < xl) xl = points[3].x;
+        if (points[3].x > xh) xh = points[3].x;
+        // delta  大于等于 0 即为有解
+        // 找到局部极限值 local extreme
+        // 需要判断处理 2 个根
+        if (disc >= 0) {
+            var t1 = (-b + Math.sqrt(disc)) / (2 * a);
+            console.log("t1 " + t1);
+            // 用 t1 值 代入算出具体的 x 值即真坐标值
+            if (t1 > 0 && t1 < 1) {
+                var x1 = evalBez(pointXArray, t1);
+                if (x1 < xl) xl = x1;
+                if (x1 > xh) xh = x1;
+            }
+
+            var t2 = (-b - Math.sqrt(disc)) / (2 * a);
+            console.log("t2 " + t2);
+            if (t2 > 0 && t2 < 1) {
+                var x2 = evalBez(pointXArray, t2);
+                if (x2 < xl) xl = x2;
+                if (x2 > xh) xh = x2;
+            }
+        }
+        return [xl, xh ]
+    }
+
+    function getYRange (points) {
+      // Y 轴进行相同的操作
+      let a = 3 * points[3].y - 9 * points[2].y + 9 * points[1].y - 3 * points[0].y;
+      let b = 6 * points[0].y - 12 * points[1].y + 6 * points[2].y;
+      let c = 3 * points[1].y - 3 * points[0].y;
+      let disc = b * b - 4 * a * c;
+      // yl: y 最小值
+      // yh: y 最大值
+      var yl = points[0].y;
+      var yh = points[0].y;
+      if (points[3].y < yl) yl = points[3].y;
+      if (points[3].y > yh) yh = points[3].y;
+      if (disc >= 0) {
+          var t1 = (-b + Math.sqrt(disc)) / (2 * a);
+          console.log("t3 " + t1);
+
+          if (t1 > 0 && t1 < 1) {
+              var y1 = evalBez(pointYArray, t1);
+              if (y1 < yl) yl = y1;
+              if (y1 > yh) yh = y1;
+          }
+
+          var t2 = (-b - Math.sqrt(disc)) / (2 * a);
+          console.log("t4 " + t2);
+
+          if (t2 > 0 && t2 < 1) {
+              var y2 = evalBez(pointYArray, t2);
+              if (y2 < yl) yl = y2;
+              if (y2 > yh) yh = y2;
+          }
+      }
+      return [yl, yh]
+    }
 
     /**
-     * 模拟曲线绘制控制
-     * n 用于控制曲线线断精度
-    */
-    function findarea(n) {
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = "#f00";
-        ctx.beginPath();
+     * 尝试画出红色切线
+     * */
+    function drawTangentLine() {
+      const [a1,b1,c1] = getABC('x');
+      const [a2,b2,c2] = getABC('y');
+      
+      ctx.beginPath();
+      ctx.strokeStyle = 'red';
+      ctx.setLineDash([]);
+      for( let t=0; t <=1; t += 0.2){
+        // 绘制起点移动到对应的曲线点上
+        const sx = evalBez(pointXArray, t);
+        const sy = evalBez(pointYArray, t);
+        ctx.moveTo(sx, sy)
 
-        var nSteps = n - 1;
-        var x = [P[0].X];
-        var y = [P[0].Y];
-        ctx.moveTo(x[0], y[0]);
-
-        var area = 0.0;
-        for (var i = 1; i <= nSteps; ++i) {
-            var t = i / nSteps;
-            x[i] = evalBez(PX, t);
-            y[i] = evalBez(PY, t);
-            // ctx.lineTo(x[i], y[i]);
-            area += (x[i] - x[i - 1]) * (y[i - 1] + y[i]) / 2;
-            if (x[i] < x[i - 1]) console.log("Not strictly increasing in x, area will be incorrect");
-        }
-        ctx.stroke();
-        $("#area").val(area);
-        getCoefficents(P);
+        // a t^2 + b t + c 
+        // 切线向量
+        let vx = a1 * Math.pow(t,2) + b1 * t + c1
+        let vy = a2 * Math.pow(t,2) + b2 * t + c2
+        // 缩至单位向量
+        let magnitude = Math.sqrt(vx * vx + vy * vy)
+        // vx = -vx / magnitude;
+        // vy = -vy / magnitude;
+        vx = vx / magnitude;
+        vy = vy / magnitude;
+        vx *= 30
+        vy *= 30
+        ctx.lineTo(sx + vx,  sy + vy);
+      }
+      ctx.stroke();
     }
 
     // 找出曲线的 BB(bounding box)
@@ -234,102 +220,26 @@
         a t^2 + b t + c = 0
       **/
       
-        var a = 3 * P[3].X - 9 * P[2].X + 9 * P[1].X - 3 * P[0].X;
-        var b = 6 * P[0].X - 12 * P[1].X + 6 * P[2].X;
-        var c = 3 * P[1].X - 3 * P[0].X;
+      const [xl, xh]  = getXRange(points)
+      const [yl, yh]  = getYRange(points)
+      
+      // 画出 BB
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.moveTo(xl, yl); // 起点，左
+      ctx.lineTo(xl, yh); // 上
+      ctx.lineTo(xh, yh); // 右上
+      ctx.lineTo(xh, yl); // 右下
+      ctx.lineTo(xl, yl); // 终点，左
+      ctx.stroke();
 
-        /**
-          
-          可用求根公式
-          - b +/- sqrt(b^2-4 a c)
-          -----------------------
-                  2 a
-          解方程可得 两个解（根） t0,t1, 无解，或 1 个解
+      console.log("" + xl + " " + xh + " " + yl + " " + yh);
 
-          我们只关心 0 <= t <= 1 的情况
-
-          这就有了四个点的极值，起点，终点，和两个解
-        */
-        
-        // 先处理 X 轴
-         
-        // delta 判断 b^2-4ac
-        var disc = b * b - 4 * a * c;
-        // xl：x 最小值
-        // xh：x 最大值
-        var xl = P[0].X;
-        var xh = P[0].X;
-        if (P[3].X < xl) xl = P[3].X;
-        if (P[3].X > xh) xh = P[3].X;
-        // delta  大于等于 0 即为有解
-        // 找到局部极限值 local extreme
-        // 需要判断处理 2 个根
-        if (disc >= 0) {
-            var t1 = (-b + Math.sqrt(disc)) / (2 * a);
-            console.log("t1 " + t1);
-            // 用 t1 值 代入算出具体的 x 值即真坐标值
-            if (t1 > 0 && t1 < 1) {
-                var x1 = evalBez(PX, t1);
-                if (x1 < xl) xl = x1;
-                if (x1 > xh) xh = x1;
-            }
-
-            var t2 = (-b - Math.sqrt(disc)) / (2 * a);
-            console.log("t2 " + t2);
-            if (t2 > 0 && t2 < 1) {
-                var x2 = evalBez(PX, t2);
-                if (x2 < xl) xl = x2;
-                if (x2 > xh) xh = x2;
-            }
-        }
-        // Y 轴进行相同的操作
-        a = 3 * P[3].Y - 9 * P[2].Y + 9 * P[1].Y - 3 * P[0].Y;
-        b = 6 * P[0].Y - 12 * P[1].Y + 6 * P[2].Y;
-        c = 3 * P[1].Y - 3 * P[0].Y;
-        disc = b * b - 4 * a * c;
-        // yl: y 最小值
-        // yh: y 最大值
-        var yl = P[0].Y;
-        var yh = P[0].Y;
-        if (P[3].Y < yl) yl = P[3].Y;
-        if (P[3].Y > yh) yh = P[3].Y;
-        if (disc >= 0) {
-            var t1 = (-b + Math.sqrt(disc)) / (2 * a);
-            console.log("t3 " + t1);
-
-            if (t1 > 0 && t1 < 1) {
-                var y1 = evalBez(PY, t1);
-                if (y1 < yl) yl = y1;
-                if (y1 > yh) yh = y1;
-            }
-
-            var t2 = (-b - Math.sqrt(disc)) / (2 * a);
-            console.log("t4 " + t2);
-
-            if (t2 > 0 && t2 < 1) {
-                var y2 = evalBez(PY, t2);
-                if (y2 < yl) yl = y2;
-                if (y2 > yh) yh = y2;
-            }
-        }
-        // 画出 BB
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(xl, yl); // 起点，左
-        ctx.lineTo(xl, yh); // 上
-        ctx.lineTo(xh, yh); // 右上
-        ctx.lineTo(xh, yl); // 右下
-        ctx.lineTo(xl, yl); // 终点，左
-        ctx.stroke();
-
-        console.log("" + xl + " " + xh + " " + yl + " " + yh);
+      drawTangentLine();
     }
 
     findBB();
-
-    $("#goBut").click(function () {
-        findarea($("#nPts").val());
-    });
   </script>
 </body>
 </html>
