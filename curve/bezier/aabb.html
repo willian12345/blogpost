@@ -19,9 +19,10 @@
     // https://stackoverflow.com/questions/24809978/calculating-the-bounding-box-of-cubic-bezier-curve
     // https://pomax.github.io/bezierinfo/#boundingbox
     
-    var canvas = document.getElementById("canvas");
-    var ctx = canvas.getContext("2d");    
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");    
 
+    let t1, t2, t3, t4;
     // 四个点
     //var points = [{x:  13, y: 224 }, 
     //         {x: 150, y: 100 }, 
@@ -30,7 +31,7 @@
 
     // 绘制正常贝塞尔曲线
     // 四个点：起点，控制点1，控制点2，终点
-    var points = [{x: 120, y: 160 }, 
+    let points = [{x: 120, y: 160 }, 
             {x:  35, y: 200 }, 
             {x: 220, y: 260 }, 
             {x: 180, y:  40 }, ];
@@ -58,68 +59,51 @@
     function evalBez(poly, t) {
         // 起点，控制点1，控制点2，终点 计算出 x 坐标
         // x = A (1-t)^3 +3 B t (1-t)^2 + 3 C t^2 (1-t) + D t^3
-        var x = poly[0] * (1 - t) * (1 - t) * (1 - t) + 3 * poly[1] * t * (1 - t) * (1 - t) + 3 * poly[2] * t * t * (1 - t) + poly[3] * t * t * t;
+        let x = poly[0] * (1 - t) * (1 - t) * (1 - t) + 3 * poly[1] * t * (1 - t) * (1 - t) + 3 * poly[2] * t * t * (1 - t) + poly[3] * t * t * t;
         return x;
     }
 
     // 四个点的 x
-    var pointXArray = [points[0].x, points[1].x, points[2].x, points[3].x];
+    let pointXArray = [points[0].x, points[1].x, points[2].x, points[3].x];
     // 四个点的 y
-    var pointYArray = [points[0].y, points[1].y, points[2].y, points[3].y];
+    let pointYArray = [points[0].y, points[1].y, points[2].y, points[3].y];
 
 
     function getABC(axis){
-      var a = 3 * points[3][axis] - 9 * points[2][axis] + 9 * points[1][axis] - 3 * points[0][axis];
-      var b = 6 * points[0][axis] - 12 * points[1][axis] + 6 * points[2][axis];
-      var c = 3 * points[1][axis] - 3 * points[0][axis];
+      let a = 3 * points[3][axis] - 9 * points[2][axis] + 9 * points[1][axis] - 3 * points[0][axis];
+      let b = 6 * points[0][axis] - 12 * points[1][axis] + 6 * points[2][axis];
+      let c = 3 * points[1][axis] - 3 * points[0][axis];
       return [a,b,c]
     }
 
     function getXRange (points){
-        var a = 3 * points[3].x - 9 * points[2].x + 9 * points[1].x - 3 * points[0].x;
-        var b = 6 * points[0].x - 12 * points[1].x + 6 * points[2].x;
-        var c = 3 * points[1].x - 3 * points[0].x;
-
-        /**
-          
-          可用求根公式
-          - b +/- sqrt(b^2-4 a c)
-          -----------------------
-                  2 a
-          解方程可得 两个解（根） t0,t1, 无解，或 1 个解
-
-          我们只关心 0 <= t <= 1 的情况
-
-          这就有了四个点的极值，起点，终点，和两个解
-        */
-        
-        // 先处理 X 轴
+        const [a, b, c] = getABC('x')
          
         // delta 判断 b^2-4ac
-        var disc = b * b - 4 * a * c;
+        let disc = b * b - 4 * a * c;
         // xl：x 最小值
         // xh：x 最大值
-        var xl = points[0].x;
-        var xh = points[0].x;
+        let xl = points[0].x;
+        let xh = points[0].x;
         if (points[3].x < xl) xl = points[3].x;
         if (points[3].x > xh) xh = points[3].x;
         // delta  大于等于 0 即为有解
         // 找到局部极限值 local extreme
         // 需要判断处理 2 个根
         if (disc >= 0) {
-            var t1 = (-b + Math.sqrt(disc)) / (2 * a);
+            t1 = (-b + Math.sqrt(disc)) / (2 * a);
             console.log("t1 " + t1);
             // 用 t1 值 代入算出具体的 x 值即真坐标值
             if (t1 > 0 && t1 < 1) {
-                var x1 = evalBez(pointXArray, t1);
+                let x1 = evalBez(pointXArray, t1);
                 if (x1 < xl) xl = x1;
                 if (x1 > xh) xh = x1;
             }
 
-            var t2 = (-b - Math.sqrt(disc)) / (2 * a);
+            t2 = (-b - Math.sqrt(disc)) / (2 * a);
             console.log("t2 " + t2);
             if (t2 > 0 && t2 < 1) {
-                var x2 = evalBez(pointXArray, t2);
+                let x2 = evalBez(pointXArray, t2);
                 if (x2 < xl) xl = x2;
                 if (x2 > xh) xh = x2;
             }
@@ -128,10 +112,7 @@
     }
 
     function getYRange (points) {
-      // Y 轴进行相同的操作
-      let a = 3 * points[3].y - 9 * points[2].y + 9 * points[1].y - 3 * points[0].y;
-      let b = 6 * points[0].y - 12 * points[1].y + 6 * points[2].y;
-      let c = 3 * points[1].y - 3 * points[0].y;
+      const [a, b, c] = getABC('y');
       let disc = b * b - 4 * a * c;
       // yl: y 最小值
       // yh: y 最大值
@@ -140,20 +121,20 @@
       if (points[3].y < yl) yl = points[3].y;
       if (points[3].y > yh) yh = points[3].y;
       if (disc >= 0) {
-          var t1 = (-b + Math.sqrt(disc)) / (2 * a);
-          console.log("t3 " + t1);
+          t3 = (-b + Math.sqrt(disc)) / (2 * a);
+          console.log("t3 " + t3);
 
-          if (t1 > 0 && t1 < 1) {
-              var y1 = evalBez(pointYArray, t1);
+          if (t3 > 0 && t3 < 1) {
+              var y1 = evalBez(pointYArray, t3);
               if (y1 < yl) yl = y1;
               if (y1 > yh) yh = y1;
           }
 
-          var t2 = (-b - Math.sqrt(disc)) / (2 * a);
-          console.log("t4 " + t2);
+          t4 = (-b - Math.sqrt(disc)) / (2 * a);
+          console.log("t4 " + t4);
 
-          if (t2 > 0 && t2 < 1) {
-              var y2 = evalBez(pointYArray, t2);
+          if (t4 > 0 && t4 < 1) {
+              var y2 = evalBez(pointYArray, t4);
               if (y2 < yl) yl = y2;
               if (y2 > yh) yh = y2;
           }
@@ -161,17 +142,50 @@
       return [yl, yh]
     }
 
+    // 绘制关键位置的红色切线
+    function drawKeySlopeTangent(){
+      const [a1,b1,c1] = getABC('x');
+      const [a2,b2,c2] = getABC('y');
+      
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 2;
+      const tArray = [t1, t2, t3, t4].filter((t)=> t >= 0);
+      for( let i=0; i <= tArray.length; i++){
+        const t = tArray[i]
+        // 绘制起点移动到对应的曲线点上
+        const sx = evalBez(pointXArray, t);
+        const sy = evalBez(pointYArray, t);
+        ctx.moveTo(sx, sy)
+
+        // a t^2 + b t + c 
+        // 切线向量
+        let vx = a1 * Math.pow(t,2) + b1 * t + c1
+        let vy = a2 * Math.pow(t,2) + b2 * t + c2
+        // 缩至单位向量
+        let magnitude = Math.sqrt(vx * vx + vy * vy)
+        vx = vx / magnitude;
+        vy = vy / magnitude;
+        vx *= 30
+        vy *= 30
+        
+        ctx.lineTo(sx + vx,  sy + vy);
+        console.log(t, vx)
+      }
+      ctx.stroke();
+    }
+
     /**
-     * 尝试画出红色切线
+     * 绘制一些淡绿色采样切线
      * */
     function drawTangentLine() {
       const [a1,b1,c1] = getABC('x');
       const [a2,b2,c2] = getABC('y');
       
       ctx.beginPath();
-      ctx.strokeStyle = 'red';
-      ctx.setLineDash([]);
-      for( let t=0; t <=1; t += 0.2){
+      ctx.setLineDash([1,1]);
+      for( let t=0; t <=1; t += 0.1){
         // 绘制起点移动到对应的曲线点上
         const sx = evalBez(pointXArray, t);
         const sy = evalBez(pointYArray, t);
@@ -189,15 +203,20 @@
         vy = vy / magnitude;
         vx *= 30
         vy *= 30
+        ctx.strokeStyle = 'rgba(0,255,0, .5)';  
         ctx.lineTo(sx + vx,  sy + vy);
+        console.log(t, vx)
       }
       ctx.stroke();
+
+      // 画出极限值的切线红色
+      drawKeySlopeTangent()
     }
 
     // 找出曲线的 BB(bounding box)
     function findBB() {
       /**
-        x 指代的是一维的坐标公式，二维的就是 x,y 算 2 遍
+        x 指代的是一维的坐标公式
         
         坐标方程： x = A (1-t)^3 +3 B t (1-t)^2 + 3 C t^2 (1-t) + D t^3
 
@@ -217,9 +236,22 @@
         
         dx/dt = 0
 
+        斜率为0可能意味着曲线在该点处有一个极小值或极大值，或者曲线在该点处是一个水平切线
+
         a t^2 + b t + c = 0
+
+        可用求根公式
+        - b +/- sqrt(b^2-4 a c)
+        -----------------------
+                2 a
+        解方程可得 两个解（根） t0,t1, 无解，或 1 个解
+
+        我们只关心 0 <= t <= 1 的情况
+
+        这就有了四个点的极值，起点，终点，和两个解
       **/
       
+      // 二维的就是 x,y 算 2 遍
       const [xl, xh]  = getXRange(points)
       const [yl, yh]  = getYRange(points)
       
@@ -227,15 +259,14 @@
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.setLineDash([]);
-      ctx.moveTo(xl, yl); // 起点，左
-      ctx.lineTo(xl, yh); // 上
+      ctx.moveTo(xl, yl); // 起点，左下
+      ctx.lineTo(xl, yh); // 左上
       ctx.lineTo(xh, yh); // 右上
       ctx.lineTo(xh, yl); // 右下
-      ctx.lineTo(xl, yl); // 终点，左
+      ctx.lineTo(xl, yl); // 终点，左下
       ctx.stroke();
 
-      console.log("" + xl + " " + xh + " " + yl + " " + yh);
-
+      // 画出切线演示
       drawTangentLine();
     }
 
