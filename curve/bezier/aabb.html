@@ -12,7 +12,7 @@
   </style>
 </head>
 <body>
-  <canvas id="canvas" width=400 height=300></canvas>
+  <canvas id="canvas" width="600" height=600></canvas>
   <script>
     // 参考资料
     // https://floris.briolas.nl/floris/2009/10/bounding-box-of-cubic-bezier/
@@ -22,41 +22,70 @@
     let canvas = document.getElementById("canvas");
     let ctx = canvas.getContext("2d");    
 
+    // 用于存储关键转折位置
     let t1, t2, t3, t4;
-    // 四个点
-    //var points = [{x:  13, y: 224 }, 
-    //         {x: 150, y: 100 }, 
-    //         {x: 251, y:  93 }, 
-    //         {x: 341, y: 224 }, ];
 
-    // 绘制正常贝塞尔曲线
-    // 四个点：起点，控制点1，控制点2，终点
-    let points = [{x: 120, y: 160 }, 
-            {x:  35, y: 200 }, 
-            {x: 220, y: 260 }, 
-            {x: 180, y:  40 }, ];
-        
+    // 曲线1
+    // let points = [
+    //   {x: 120, y: 160 }, 
+    //   {x:  35, y: 200 }, 
+    //   {x: 220, y: 260 }, 
+    //   {x: 180, y:  40 }, 
+    // ];
 
+    // 曲线2
+    // const points = [
+    //   {x:  13, y: 224 }, 
+    //   {x: 150, y: 100 },
+    //   {x: 251, y:  93 }, 
+    //   {x: 341, y: 224 }, 
+    // ];
+
+    // 曲线2
+    const points = [
+      { x: 20, y: 340 },
+      { x: 50, y: 400 },
+      { x: 320, y: 180 },
+      { x: 480, y: 340 },
+    ];
+
+    // 内置 api 绘制正常贝塞尔曲线
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "#333";
+    ctx.strokeStyle = "black";
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     ctx.bezierCurveTo(points[1].x, points[1].y, points[2].x, points[2].y, points[3].x, points[3].y);
     ctx.stroke();
-
+    
     // 画出控制点折线
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.setLineDash([2, 4]);
-    ctx.moveTo(points[0].x, points[0].y);
-    ctx.lineTo(points[1].x, points[1].y);
-    ctx.lineTo(points[2].x, points[2].y);
-    ctx.lineTo(points[3].x, points[3].y);
-    ctx.stroke();
+    
+    // ctx.beginPath();
+    // ctx.lineWidth = 2;
+    // ctx.setLineDash([1, 1]);
+    // ctx.strokeStyle = '#076c75';
+    // ctx.moveTo(points[0].x, points[0].y);
+    // ctx.lineTo(points[1].x, points[1].y);
+    // ctx.stroke()
+
+    // ctx.beginPath();
+    // ctx.setLineDash([4, 4]);
+    // ctx.lineWidth = 1;
+    // ctx.moveTo(points[1].x, points[1].y);
+    // ctx.strokeStyle = 'black';
+    // ctx.lineTo(points[2].x, points[2].y);
+    // ctx.stroke()
+
+    // ctx.beginPath();
+    // ctx.setLineDash([1, 1]);
+    // ctx.lineWidth = 2;
+    // ctx.strokeStyle = '#076c75';
+    // ctx.moveTo(points[2].x, points[2].y);
+    // ctx.lineTo(points[3].x, points[3].y);
+    // ctx.stroke();
 
 
     // 根据传入的 poly 四个控制点，和 t 值计算出具体的坐标值
-    function evalBez(poly, t) {
+    function calcBezierByT(poly, t) {
         // 起点，控制点1，控制点2，终点 计算出 x 坐标
         // x = A (1-t)^3 +3 B t (1-t)^2 + 3 C t^2 (1-t) + D t^3
         let x = poly[0] * (1 - t) * (1 - t) * (1 - t) + 3 * poly[1] * t * (1 - t) * (1 - t) + 3 * poly[2] * t * t * (1 - t) + poly[3] * t * t * t;
@@ -80,7 +109,7 @@
         const [a, b, c] = getABC('x')
          
         // delta 判断 b^2-4ac
-        let disc = b * b - 4 * a * c;
+        let delta = b * b - 4 * a * c;
         // xl：x 最小值
         // xh：x 最大值
         let xl = points[0].x;
@@ -90,20 +119,20 @@
         // delta  大于等于 0 即为有解
         // 找到局部极限值 local extreme
         // 需要判断处理 2 个根
-        if (disc >= 0) {
-            t1 = (-b + Math.sqrt(disc)) / (2 * a);
+        if (delta >= 0) {
+            t1 = (-b + Math.sqrt(delta)) / (2 * a);
             console.log("t1 " + t1);
             // 用 t1 值 代入算出具体的 x 值即真坐标值
             if (t1 > 0 && t1 < 1) {
-                let x1 = evalBez(pointXArray, t1);
+                let x1 = calcBezierByT(pointXArray, t1);
                 if (x1 < xl) xl = x1;
                 if (x1 > xh) xh = x1;
             }
 
-            t2 = (-b - Math.sqrt(disc)) / (2 * a);
+            t2 = (-b - Math.sqrt(delta)) / (2 * a);
             console.log("t2 " + t2);
             if (t2 > 0 && t2 < 1) {
-                let x2 = evalBez(pointXArray, t2);
+                let x2 = calcBezierByT(pointXArray, t2);
                 if (x2 < xl) xl = x2;
                 if (x2 > xh) xh = x2;
             }
@@ -113,28 +142,28 @@
 
     function getYRange (points) {
       const [a, b, c] = getABC('y');
-      let disc = b * b - 4 * a * c;
+      let delta = b * b - 4 * a * c;
       // yl: y 最小值
       // yh: y 最大值
       var yl = points[0].y;
       var yh = points[0].y;
       if (points[3].y < yl) yl = points[3].y;
       if (points[3].y > yh) yh = points[3].y;
-      if (disc >= 0) {
-          t3 = (-b + Math.sqrt(disc)) / (2 * a);
+      if (delta >= 0) {
+          t3 = (-b + Math.sqrt(delta)) / (2 * a);
           console.log("t3 " + t3);
 
           if (t3 > 0 && t3 < 1) {
-              var y1 = evalBez(pointYArray, t3);
+              var y1 = calcBezierByT(pointYArray, t3);
               if (y1 < yl) yl = y1;
               if (y1 > yh) yh = y1;
           }
 
-          t4 = (-b - Math.sqrt(disc)) / (2 * a);
+          t4 = (-b - Math.sqrt(delta)) / (2 * a);
           console.log("t4 " + t4);
 
           if (t4 > 0 && t4 < 1) {
-              var y2 = evalBez(pointYArray, t4);
+              var y2 = calcBezierByT(pointYArray, t4);
               if (y2 < yl) yl = y2;
               if (y2 > yh) yh = y2;
           }
@@ -155,8 +184,8 @@
       for( let i=0; i <= tArray.length; i++){
         const t = tArray[i]
         // 绘制起点移动到对应的曲线点上
-        const sx = evalBez(pointXArray, t);
-        const sy = evalBez(pointYArray, t);
+        const sx = calcBezierByT(pointXArray, t);
+        const sy = calcBezierByT(pointYArray, t);
         ctx.moveTo(sx, sy)
 
         // a t^2 + b t + c 
@@ -187,8 +216,8 @@
       ctx.setLineDash([1,1]);
       for( let t=0; t <=1; t += 0.1){
         // 绘制起点移动到对应的曲线点上
-        const sx = evalBez(pointXArray, t);
-        const sy = evalBez(pointYArray, t);
+        const sx = calcBezierByT(pointXArray, t);
+        const sy = calcBezierByT(pointYArray, t);
         ctx.moveTo(sx, sy)
 
         // a t^2 + b t + c 
@@ -203,7 +232,7 @@
         vy = vy / magnitude;
         vx *= 30
         vy *= 30
-        ctx.strokeStyle = 'rgba(0,255,0, .5)';  
+        ctx.strokeStyle = 'rgba(0,255,0, 1)';  
         ctx.lineTo(sx + vx,  sy + vy);
         console.log(t, vx)
       }
@@ -258,6 +287,7 @@
       // 画出 BB
       ctx.lineWidth = 1;
       ctx.beginPath();
+      ctx.strokeStyle = 'black';
       ctx.setLineDash([]);
       ctx.moveTo(xl, yl); // 起点，左下
       ctx.lineTo(xl, yh); // 左上

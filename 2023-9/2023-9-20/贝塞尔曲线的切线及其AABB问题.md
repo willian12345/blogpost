@@ -82,7 +82,9 @@ stage.addChild(img, t1)
 
 之前在翻译 [贝塞尔曲线文字路径](https://www.cnblogs.com/willian/p/17706242.html) 一文中提到过三阶贝塞尔曲线
 
-它由 4 个控制点：
+它是用 C# 伪代码来讲解的
+
+定义 4 个控制点：
 
 ```
 (x1, y1), (x2, y2), (x3, y3), (x4,y4)
@@ -196,113 +198,262 @@ console.log(sx + px, sy + py);
 
 要实现三阶贝塞尔曲线的AABB(包围合)还是得从切线入手
 
+比如像下面这个曲线
+
+```
+let points = [
+      {x: 120, y: 160 }, 
+      {x:  35, y: 200 }, 
+      {x: 220, y: 260 }, 
+      {x: 180, y:  40 }, 
+];
+```
+四个点得出的结果：
+
+![image](./3.png)
 
 
+先把它的四个点用直线连接画出来
+
+```
+ctx.beginPath();
+ctx.lineWidth = 2;
+ctx.setLineDash([1, 2]);
+ctx.strokeStyle = '#076c75';
+ctx.moveTo(points[0].x, points[0].y);
+ctx.lineTo(points[1].x, points[1].y);
+ctx.stroke()
+
+ctx.beginPath();
+ctx.lineWidth = 1;
+ctx.moveTo(points[1].x, points[1].y);
+ctx.strokeStyle = 'black';
+ctx.lineTo(points[2].x, points[2].y);
+ctx.stroke()
+
+ctx.beginPath();
+ctx.lineWidth = 2;
+ctx.strokeStyle = '#076c75';
+ctx.moveTo(points[2].x, points[2].y);
+ctx.lineTo(points[3].x, points[3].y);
+ctx.stroke();
+```
+
+![image](./4.png)
 
 
+蓝色的线就像是控制手柄
 
+点 points[1] 和 points[2] 分别就是控制手柄
 
+控制手柄就是 PS 内的钢笔工具用过吧？就是这个，长短与位置调节就控制了曲线的形状
 
+BB 包围盒就是找到曲线所有转折点中最小和最大的转折点
 
+找转折点，可理解为找到曲线上的斜率
 
+还是从公式入手
 
+在上一节中贝塞尔公式系数直接把 x, y 都用 A..H 表示出来了
 
+这次先简化到一维比如 x ， 系数用 A..D 表示
 
+x 坐标方程即（y 轴坐标方程其实是一样的，只是算了两遍）：
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-在翻译 [贝塞尔曲线文字路径](https://www.cnblogs.com/willian/p/17706242.html) 一文中提到过垂直于切线的向量
-
-文中是用 c# 伪代码形式讲解的作为一个 web 前端，还是得用 Javascript 来实践验证一下
-
-You’ll need to know the function of the cubic bezier. Defined as:
-f(t) = a*t^3 + b*t^2 + c*t +d
-where
-d = P0
-c = 3*P1-3*P0
-b = 3*P2-6*P1+3*P0
-a = P3-3*P2+3*P1-P0
-
-p0 and p3 are the begin and end point of the bezier, p1 & p2 the control points. This function is defined for t=[0..1] so (0, 0.00001, 0.00002, … 0.99999)
-
-
-
-
-
-
-Most of this is addressed in An algorithm to find bounding box of closed bezier curves? except here we have cubic Beziers and there they were dealing with quadratic Bezier curves.
-
-Essentially you need to take the derivatives of each of the coordinate functions. If the x-coord is given by
-
+```
 x = A (1-t)^3 +3 B t (1-t)^2 + 3 C t^2 (1-t) + D t^3
+```
 
-differentiating with respect to t.
+对其求导，关于 t 的微分，得到微分方程
 
+```
 dx/dt =  3 (B - A) (1-t)^2 + 6 (C - B) (1-t) t + 3 (D - C) t^2
       =  [3 (D - C) - 6 (C - B) + 3 (B - A)] t^2
-       + [ -6 (B - A) - 6 (C - B)] t
-       + 3 (B - A) 
+      + [ -6 (B - A) - 6 (C - B)] t
+      + 3 (B - A) 
       =  (3 D - 9 C + 9 B - 3 A) t^2 + (6 A - 12 B + 6 C) t + 3 (B - A)
+```
 
-this is a quadratic which we can write at a t^2 + b t + c. We want to solve dx/dt = 0 which you can do using the quadratic formula
+合并整理后是一个二次函数： 
 
+```
+dx/dt = (3 D - 9 C + 9 B - 3 A) t^2 + (6 A - 12 B + 6 C) t + 3 (B - A)
+```
+
+用其 a, b, c 简化系数代替后：
+
+```
+dx/dt = a t^2 + b t + c
+```
+
+我们要解决的是  dx/dt = 0
+      
+"斜率为 0 可能意味着曲线在该点处有一个极小值或极大值，或者曲线在该点处是一个水平切线"
+
+反正我这个学渣是这么理解的
+
+那么就是对二交方程求解
+
+a t^2 + b t + c = 0
+
+可用求根公式
+
+```
 - b +/- sqrt(b^2-4 a c)
 -----------------------
-        2 a
+      2 a
+```
 
-Solving this will either gives two solutions t0, t1 say, no solutions or in rare case just one solution. We are only interest in solutions with 0 <= t <= 1. You will have a maximum of four candidate points, the two end points and the two solutions. Its a simple matter to find which of these give the extreme points.
+解方程可得 两个解（根） t0, t1, 无解，或 1 个解
 
-You can repeat the same process for each coordinate and then get the bounding box.
 
-I've put this for the 2D case in a js fiddle http://jsfiddle.net/SalixAlba/QQnvm/4/
-Share
-Improve this answer
-Follow
-edited May 23, 2017 at 10:29
-Community's user avatar
-CommunityBot
-111 silver badge
-answered Jul 17, 2014 at 22:24
-Salix alba's user avatar
-Salix alba
-7,53622 gold badges3232 silver badges3838 bronze badges
+这就有了四个点的极值，起点，终点，和两个解
 
-    Awesome, thanks! I noticed an instability, though, when a==0, it gives incorrect bounds, as t1 and t2 both turn out to be infinity. I fixed it with a hack that seems to work: if (a==0) a = 0.0000001; an example: jsfiddle.net/QQnvm/38 (actually a quadratic.) – 
-    Jeff Ward
-    Jan 12, 2017 at 15:40
-    2
-    That hack is kinda pointless, though. Rather than using hacks, you could just check the formula for how to handle that case. If a == 0, you can simply solve the equation b t + c = 0 which gives you t = -c / b. – 
-    Stefan Fabian
-    Dec 29, 2017 at 11:11
+
+系数 a, b, c 就是根据公式代入, 比如 x 的坐标代入后：
+
+```
+let a = 3 * points[3].x - 9 * points[2].x + 9 * points[1].x - 3 * points[0].x;
+let b = 6 * points[0].x - 12 * points[1].x + 6 * points[2].x;
+let c = 3 * points[1].x - 3 * points[0].x;
+```
+
+还记得初中数学如何判断二次函数有几个根吧？
+
+delta 即 b^2-4ac 判断 大于等于 0 即为有解
+
+```
+let delta = b * b - 4 * a * c;
+```
+
+判断有解后找到局部极限值 (local extreme)
+
+代入求根公式:
+
+```
+t1 = (-b + Math.sqrt(delta)) / (2 * a);
+t2 = (-b - Math.sqrt(delta)) / (2 * a);
+```
+
+我们只关心 0 <= t <= 1 的情况
+
+将得到和 t1, t2 分别代入贝塞尔曲线公式
+
+```
+x = A (1-t)^3 +3 B t (1-t)^2 + 3 C t^2 (1-t) + D t^3
+```
+
+得到的就是真实的 x 坐标值，
+
+所以需 x 要判断
+
+```
+if (x < xl) xl = x;
+if (x > xh) xh = x;
+```
+
+记住是求出的二个根 t1, t2 分别代入判断
+
+它有可能是最大值，也有可能是最小值 记作： xl, xh
+
+对 y 同样进行一模一样的计算，t3, t4 也可以得到一最大值与最小值 记作：yl, yh
+
+将它们从起点 左下，左上，右上，右下，左下终点 的顺序连接起来就是我们要的 BB 包围盒
+
+```
+ctx.moveTo(xl, yl); // 起点，左下
+ctx.lineTo(xl, yh); // 左上
+ctx.lineTo(xh, yh); // 右上
+ctx.lineTo(xh, yl); // 右下
+ctx.lineTo(xl, yl); // 终点，左下
+```
+
+![image](./5.png)
+
+如上图，包围盒围起来了，解决了计算贝塞尔曲线宽高计算的问题
+
+## 画出切线验证
+
+再把曲线的切线画出来，这回我们不画垂直向量，直接画切线
+
+切线向量这道菜已经吃过了..
+
+将 t 步长设为 0.1, 进行曲线采样, 画出绿色的切线
+
+```
+for( let t=0; t <=1; t += 0.1){
+      // 绘制起点移动到对应的曲线点上
+      const sx = calcBezierByT(pointXArray, t);
+      const sy = calcBezierByT(pointYArray, t);
+      ctx.moveTo(sx, sy)
+
+      // a t^2 + b t + c 
+      // 切线向量
+      let vx = a1 * Math.pow(t,2) + b1 * t + c1
+      let vy = a2 * Math.pow(t,2) + b2 * t + c2
+      // 缩至单位向量
+      let magnitude = Math.sqrt(vx * vx + vy * vy)
+      // vx = -vx / magnitude;
+      // vy = -vy / magnitude;
+      vx = vx / magnitude;
+      vy = vy / magnitude;
+      // 向量长度变长 30 个单位
+      vx *= 30
+      vy *= 30
+      ctx.strokeStyle = 'green';  
+      ctx.lineTo(sx + vx,  sy + vy);
+      }
+      ctx.stroke();
+}
+
+```
+
+![image](./6.png)
+
+
+代入上一节算出的 t1, t2, t3, t4 用红色画出局部极限值 (local extreme) 验证
+
+注意 曲线不同，t1， t2, t3, t4 的值有可能有，有可能没有，且我们需要的是 t1 >= 0
+
+需要这样处理
+
+```
+// 过滤
+const tArray = [t1, t2, t3, t4].filter((t)=> t >= 0);
+
+for( let i=0; i <= tArray.length; i++){
+      ...与上面生成切线一样，只是 t 值是从 tArray 获取，而不是 0.1 步长
+}
+```
+
+![image](./7.png)
+
+可以看到，红色标出的果然很 “极限”
+
+代入不同的坐标值看看
+
+```
+const points = [
+      { x: 20, y: 340 },
+      { x: 50, y: 400 },
+      { x: 320, y: 180 },
+      { x: 480, y: 340 },
+    ];
+```
+
+![image](./8.png)
+
+```
+const points = [
+{x:  13, y: 224 }, 
+{x: 150, y: 100 },
+{x: 251, y:  93 }, 
+{x: 341, y: 224 }, 
+];
+```
+
+![image](./9.png)
+
+
+可以看到，有些曲线极限值就不一定要四个
 
