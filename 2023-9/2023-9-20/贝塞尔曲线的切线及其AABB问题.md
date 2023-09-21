@@ -10,19 +10,31 @@
 
 可以将时间花一部分在自己感兴趣的内容上了，想到哪里干到哪里
 
+怎么形容我自己呢，对编程是又菜又爱
+
 而最近在翻译文章时贝塞尔曲线又回顾了一下
 
-这不是想起 2020 年遇到过的一个技术问题：曲线的 AABB
+这让我想起了 2020 年遇到过的一个技术问题：曲线的 AABB
 
 AABB 即图形界中常说的 AABB (axis-aligned bounding box) 包围盒, 严格来说是未能实现 BB
 
-是时候解决一下了，有点儿朝花夕拾那意思了
+规则的图形很容易通过顶点距离就可以计算出 BB， 但像贝塞尔曲线这样的曲线就不太好算
+
+是时候解决一下了
 
 
+要实现的效果
 
-## 2020 年的微信小程序
+![image](./10.png)
 
-自己写的简单图形库曲线未能实现 AABB
+![image](./11.png)
+
+![image](./12.png)
+
+
+## 源起 2020 年写微信小程序
+
+在当年写了个简单图形库，但曲线未能实现 AABB
 
 那是在 2020 年上一家公司，公司安排我负责微信小程序的开发
 
@@ -65,7 +77,13 @@ stage.addChild(img, t1)
 
 ```
 
-至少对于当时的项目来讲，DuduCanvas 运行的还不错
+至少对于当时的项目来讲，DuduCanvas 运行的还不错，毕竟不是用它做动画或者游戏
+
+
+
+
+还好，我代码存到了 github 上，在新公司临时做项目时还派上了用场用它画了个积分统计图
+
 
 但它有几个缺点：
 
@@ -74,6 +92,8 @@ stage.addChild(img, t1)
 2. 绘制曲线图形后的 BB 未能实现，需要自己手动指定
 
 3. 由于是 2020 年 当时微信小程序的 Canvas 2D 版本还牌测试版，所以使用的旧版 Canvas API
+
+4. graphics 实现过于简单好多重复命令未去除
 
 没过多久离职了，工作重心也从小程序转到其它前端项目
 
@@ -190,8 +210,12 @@ console.log(sx + px, sy + py);
 
 ![image](./2.png)
 
-源码：...
+源码尽量平铺直叙：...
 
+https://github.com/willian12345/blogpost/blob/main/curve/bezier/cubic-bezier-tangent-test.html
+
+
+如果你对贝塞尔曲线感兴趣还可以看一下我翻译的《曲线编程艺术》的 [贝塞尔曲线](https://www.cnblogs.com/willian/p/17476389.html) 这一章
 
 
 ## 把三阶贝塞尔曲线包起来
@@ -409,7 +433,7 @@ for( let t=0; t <=1; t += 0.1){
 ```
 
 ![image](./6.png)
-
+(绿色颜色有点儿淡了感觉...)
 
 代入上一节算出的 t1, t2, t3, t4 用红色画出局部极限值 (local extreme) 验证
 
@@ -453,7 +477,17 @@ const points = [
 ```
 
 ![image](./9.png)
+(绿色颜色快看不出来了，PC上的微信截图工具会模糊截图...)
+
+可以看到，有些曲线极限值就不一定有四个
 
 
-可以看到，有些曲线极限值就不一定要四个
+
+参考资料:
+
+https://floris.briolas.nl/floris/2009/10/bounding-box-of-cubic-bezier/
+
+https://stackoverflow.com/questions/24809978/calculating-the-bounding-box-of-cubic-bezier-curve
+
+https://pomax.github.io/bezierinfo/#boundingbox
 

@@ -14,11 +14,7 @@
 <body>
   <canvas id="canvas" width="600" height=600></canvas>
   <script>
-    // 参考资料
-    // https://floris.briolas.nl/floris/2009/10/bounding-box-of-cubic-bezier/
-    // https://stackoverflow.com/questions/24809978/calculating-the-bounding-box-of-cubic-bezier-curve
-    // https://pomax.github.io/bezierinfo/#boundingbox
-    
+
     let canvas = document.getElementById("canvas");
     let ctx = canvas.getContext("2d");    
 
@@ -26,12 +22,12 @@
     let t1, t2, t3, t4;
 
     // 曲线1
-    // let points = [
-    //   {x: 120, y: 160 }, 
-    //   {x:  35, y: 200 }, 
-    //   {x: 220, y: 260 }, 
-    //   {x: 180, y:  40 }, 
-    // ];
+    let points = [
+      {x: 120, y: 160 }, 
+      {x:  35, y: 200 }, 
+      {x: 220, y: 260 }, 
+      {x: 180, y:  40 }, 
+    ];
 
     // 曲线2
     // const points = [
@@ -42,12 +38,12 @@
     // ];
 
     // 曲线2
-    const points = [
-      { x: 20, y: 340 },
-      { x: 50, y: 400 },
-      { x: 320, y: 180 },
-      { x: 480, y: 340 },
-    ];
+    // const points = [
+    //   { x: 20, y: 340 },
+    //   { x: 50, y: 400 },
+    //   { x: 320, y: 180 },
+    //   { x: 480, y: 340 },
+    // ];
 
     // 内置 api 绘制正常贝塞尔曲线
     ctx.lineWidth = 1;
@@ -59,29 +55,29 @@
     
     // 画出控制点折线
     
-    // ctx.beginPath();
-    // ctx.lineWidth = 2;
-    // ctx.setLineDash([1, 1]);
-    // ctx.strokeStyle = '#076c75';
-    // ctx.moveTo(points[0].x, points[0].y);
-    // ctx.lineTo(points[1].x, points[1].y);
-    // ctx.stroke()
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.setLineDash([1, 1]);
+    ctx.strokeStyle = '#076c75';
+    ctx.moveTo(points[0].x, points[0].y);
+    ctx.lineTo(points[1].x, points[1].y);
+    ctx.stroke()
 
-    // ctx.beginPath();
-    // ctx.setLineDash([4, 4]);
-    // ctx.lineWidth = 1;
-    // ctx.moveTo(points[1].x, points[1].y);
-    // ctx.strokeStyle = 'black';
-    // ctx.lineTo(points[2].x, points[2].y);
-    // ctx.stroke()
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.moveTo(points[1].x, points[1].y);
+    ctx.strokeStyle = 'black';
+    ctx.lineTo(points[2].x, points[2].y);
+    ctx.stroke()
 
-    // ctx.beginPath();
-    // ctx.setLineDash([1, 1]);
-    // ctx.lineWidth = 2;
-    // ctx.strokeStyle = '#076c75';
-    // ctx.moveTo(points[2].x, points[2].y);
-    // ctx.lineTo(points[3].x, points[3].y);
-    // ctx.stroke();
+    ctx.beginPath();
+    ctx.setLineDash([1, 1]);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#076c75';
+    ctx.moveTo(points[2].x, points[2].y);
+    ctx.lineTo(points[3].x, points[3].y);
+    ctx.stroke();
 
 
     // 根据传入的 poly 四个控制点，和 t 值计算出具体的坐标值
