@@ -80,10 +80,14 @@ stage.addChild(img, t1)
 至少对于当时的项目来讲，DuduCanvas 运行的还不错，毕竟不是用它做动画或者游戏
 
 
+[image](https://images.cnblogs.com/cnblogs_com/willian/547588/o_230921093807_WX20211214-192038.png)
+
+[image](https://images.cnblogs.com/cnblogs_com/willian/547588/o_230921093807_WX20211214-192132.png)
 
 
 还好，我代码存到了 github 上，在新公司临时做项目时还派上了用场用它画了个积分统计图
 
+[image](https://images.cnblogs.com/cnblogs_com/willian/547588/o_230921093807_WX20211214-192419.png)
 
 但它有几个缺点：
 
@@ -481,9 +485,27 @@ const points = [
 
 可以看到，有些曲线极限值就不一定有四个
 
+https://github.com/willian12345/blogpost/blob/main/curve/bezier/aabb.html
 
+## 后续
+
+贝塞尔曲线虽然原理很简单，但深入后就会特别复杂，你们好好深入，反正以我的能力是深入不了的
+
+作为一个打工人，就要有打工人的觉悟，主打一个随意，没必要在一个问题上死磕
+
+东看看，西看看，说不定回头再来看问题，已具备足够的知识与资料后就解决了
+
+创业公司麻，就是这么的不稳定，何况是在这样一个环境下
+
+最近公司要让我重新再接触 unity ，这又绕回来了， c# 其实挺好的
+
+
+
+----
 
 参考资料:
+
+https://developer.mozilla.org/zh-CN/docs/Web/API/CanvasRenderingContext2D/bezierCurveTo
 
 https://floris.briolas.nl/floris/2009/10/bounding-box-of-cubic-bezier/
 
