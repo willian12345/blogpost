@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transform3d</title>
+  <style>
+    html,body{margin: 0; padding: 0;}
+    .page{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+    }
+    .target-box{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 378px;
+      height: 500px;
+    }
+    .box{
+      width: 302px;
+      height: 400px;
+      transition: all .5s ease-out 0s;
+    }
+
+    img{
+      width: 100%;
+    }
+
+  </style>
+  <script src="https://cdn.bootcdn.net/ajax/libs/numeric/1.2.6/numeric.min.js"></script>
+  <script src="https://lodash.com/vendor/cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="target-box" id="targetBox">
+      <div class="box" id="box"><img src="./i/s3021624.jpg"></div>
+    </div>
+  </div>
+  <script>
+    function init(){
+      const box = document.querySelector('#box');
+      const targetBox = document.querySelector('#targetBox');
+
+      function getTransform(from, to) {
+        var A, H, b, h, i, k, k_i, l, lhs, m, ref, rhs;
+        A = []; // 8x8
+        for (i = k = 0; k < 4; i = ++k) {
+          A.push([from[i].x, from[i].y, 1, 0, 0, 0, -from[i].x * to[i].x, -from[i].y * to[i].x]);
+          A.push([0, 0, 0, from[i].x, from[i].y, 1, -from[i].x * to[i].y, -from[i].y * to[i].y]);
+        }
+        b = []; // 8x1
+        for (i = l = 0; l < 4; i = ++l) {
+          b.push(to[i].x);
+          b.push(to[i].y);
+        }
+        // Solve A * h = b for h
+        h = numeric.solve(A, b);
+        H = [[h[0], h[1], 0, h[2]], [h[3], h[4], 0, h[5]], [0, 0, 1, 0], [h[6], h[7], 0, 1]];
+        return H;
+      };
+
+      function applyTransform(element, origin, target, callback) {
+        var H, from, i, j, p, to;
+        // All offsets were calculated relative to the document
+        // Make them relative to (0, 0) of the element instead
+        from = (function() {
+          var k, len, results;
+          results = [];
+          for (k = 0, len = origin.length; k < len; k++) {
+            p = origin[k];
+            results.push({
+              x: p[0] - origin[0][0],
+              y: p[1] - origin[0][1]
+            });
+          }
+          return results;
+        })();
+        to = (function() {
+          var k, len, results;
+          results = [];
+          for (k = 0, len = target.length; k < len; k++) {
+            p = target[k];
+            results.push({
+              x: p[0] - origin[0][0],
+              y: p[1] - origin[0][1]
+            });
+          }
+          return results;
+        })();
+        
+        H = getTransform(from, to);
+        
+        element.style.transform = `matrix3d(${((function() {
+            var k, results;
+            results = [];
+            for (i = k = 0; k < 4; i = ++k) {
+              results.push((function() {
+                var l, results1;
+                results1 = [];
+                for (j = l = 0; l < 4; j = ++l) {
+                  results1.push(H[j][i].toFixed(20));
+                }
+                return results1;
+              })());
+            }
+            return results;
+        })()).join(',')})`;
+
+        element.style.transformOrigin =  '0 0';
+
+        return typeof callback === "function" ? callback(element, H) : void 0;
+      };
+
+      function getPoints(element){
+        const rect = element.getBoundingClientRect();
+        return [
+          [rect.left, rect.top],
+          [rect.left, rect.bottom],
+          [rect.right, rect.top],
+          [rect.right, rect.bottom],
+        ];
+      }
+
+      
+      const targetBoxPoints = getPoints(targetBox)
+      let originalPoints = getPoints(box)
+      let targetPoints = getPoints(box)
+      let step = 0
+      let steps = [1, 3, 0, 2];
+      let timer;
+      console.log(originalPoints, targetPoints, targetBoxPoints)
+      function animate(){
+        if(step > 3){
+          clearTimeout(timer)
+          step = 0
+          return;
+        }
+        
+        index = steps[step]
+        targetPoints[index] = targetBoxPoints[index];
+        applyTransform(box, originalPoints, targetPoints, (element, H) => {
+          console.log(element, H)
+        })
+        step++;
+        console.log(step)
+        timer = setTimeout(animate, 800);
+      }
+
+      document.body.addEventListener('click', ()=> {
+        animate()
+      })
+
+    }
+
+    init();
+  </script>
+</body>
+</html>
