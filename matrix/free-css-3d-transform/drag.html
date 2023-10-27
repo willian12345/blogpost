@@ -51,6 +51,30 @@
       const box = document.querySelector('#box');
       const handles = document.querySelectorAll('.handle')
 
+      function getFromMatrix(points){
+        const result = [];
+        const len = points.length;
+        for (let k = 0; k < len; k++) {
+          let p = points[k];
+          result.push({
+            x: p[0] - points[0][0],
+            y: p[1] - points[0][1]
+          });
+        }
+        return result;
+      }
+      function getToMatrix(origin, target){
+        const result = [];
+        for (let k = 0, len = target.length; k < len; k++) {
+          p = target[k];
+          result.push({
+            x: p[0] - origin[0][0],
+            y: p[1] - origin[0][1]
+          });
+        }
+        return result;
+      }
+
       function getTransform(from, to) {
         var A, H, b, h;
         A = []; // 8x8
@@ -65,52 +89,45 @@
         }
         // Solve A * h = b for h
         h = numeric.solve(A, b);
-        H = [[h[0], h[1], 0, h[2]], [h[3], h[4], 0, h[5]], [0, 0, 1, 0], [h[6], h[7], 0, 1]];
+
+        /**
+          解得: h matrix
+          [
+            h0, h1, 0 h2
+            h3, h4, 0 h5
+            0,  0, 0, 1
+            h6, h7, 0 h8
+          ]
+        */
+        H = [
+              [h[0], h[1], 0, h[2]],
+              [h[3], h[4], 0, h[5]],
+              [0, 0, 1, 0],
+              [h[6], h[7], 0, 1]
+            ];
         return H;
       };
 
-      function applyTransform(element, origin, target) {
-        const from = (function() {
-          const results = [];
-          const len = origin.length;
-          for (let k = 0; k < len; k++) {
-            let p = origin[k];
-            results.push({
-              x: p[0] - origin[0][0],
-              y: p[1] - origin[0][1]
-            });
-          }
-          return results;
-        })();
+      function getMatrixCSSParameters(H){
+        const result = [];
+        for (let i =0, k = 0; k < 4; i = ++k) {
+          result.push((function() {
+            const  result1 = [];
+            for (let j = l = 0; l < 4; j = ++l) {
+              result1.push(H[j][i].toFixed(20));
+            }
+            return result1;
+          })());
+        }
+        return result.join(',');
+      }
 
-        const to = (function() {
-          var k, len, results;
-          results = [];
-          for (k = 0, len = target.length; k < len; k++) {
-            p = target[k];
-            results.push({
-              x: p[0] - origin[0][0],
-              y: p[1] - origin[0][1]
-            });
-          }
-          return results;
-        })();
-        
+      function applyTransform(element, origin, target) {
+        const from = getFromMatrix(origin);
+        const to = getToMatrix(origin, target);
         const H = getTransform(from, to);
         
-        element.style.transform = `matrix3d(${((function() {
-            const results = [];
-            for (let i =0, k = 0; k < 4; i = ++k) {
-              results.push((function() {
-                const  results1 = [];
-                for (let j = l = 0; l < 4; j = ++l) {
-                  results1.push(H[j][i].toFixed(20));
-                }
-                return results1;
-              })());
-            }
-            return results;
-        })()).join(',')})`;
+        element.style.transform = `matrix3d(${getMatrixCSSParameters(H)})`;
 
         element.style.transformOrigin =  '0 0';
       };
