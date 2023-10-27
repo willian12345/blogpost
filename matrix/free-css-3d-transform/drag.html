@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Transform3d</title>
   <style>
-    html,body{margin: 0; padding: 0;}
+    html,body{margin: 0; padding: 0; user-select: none;}
     .page{
       display: flex;
       align-items: center;
@@ -13,21 +13,26 @@
       width: 100vw;
       height: 100vh;
     }
-    .target-box{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 378px;
-      height: 500px;
-    }
+
     .box{
       width: 302px;
       height: 400px;
-      transition: all .5s ease-out 0s;
+      background-color: green;
     }
 
     img{
       width: 100%;
+    }
+
+    .handle{
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 1;
+      width: 20px;
+      height: 20px;
+      border-radius: 100%;
+      background-color: rgba(255, 0, 0, .5);
     }
 
   </style>
@@ -35,14 +40,16 @@
 </head>
 <body>
   <div class="page">
-    <div class="target-box" id="targetBox">
-      <div class="box" id="box"><img src="./i/s3021624.jpg"></div>
-    </div>
+    <div class="box" id="box"><img src="./i/s3021624.jpg"></div>
+    <div class="handle"></div>
+    <div class="handle"></div>
+    <div class="handle"></div>
+    <div class="handle"></div>
   </div>
   <script>
     function init(){
       const box = document.querySelector('#box');
-      const targetBox = document.querySelector('#targetBox');
+      const handles = document.querySelectorAll('.handle')
 
       function getTransform(from, to) {
         var A, H, b, h;
@@ -117,36 +124,51 @@
           [rect.right, rect.bottom],
         ];
       }
-
-      
-      const targetBoxPoints = getPoints(targetBox)
-      let originalPoints = getPoints(box)
-      let targetPoints = getPoints(box)
-      let step = 0
-      let steps = [1, 3, 0, 2];
-      let timer;
-      
-      console.log(originalPoints, targetPoints, targetBoxPoints)
-      function animate(){
-        if(step > 3){
-          clearTimeout(timer)
-          step = 0
-          return;
+      function getControlPoints(element){
+        const result = [];
+        for( let handle of handles){
+          const rect = handle.getBoundingClientRect()
+          result.push([rect.x + 10, rect.y + 10]);
         }
-        
-        index = steps[step]
-        targetPoints[index] = targetBoxPoints[index];
-        applyTransform(box, originalPoints, targetPoints)
-        step++;
-        console.log(step)
-        timer = setTimeout(animate, 800);
+        return result;
+      }
+      
+      const originalPoints = getPoints(box);
+
+      const initControlHandles = () => {
+        originalPoints.forEach( (p, i) => {
+          handles[i].style.left = `${p[0] - 10}px`
+          handles[i].style.top = `${p[1] - 10}px`
+        })
       }
 
-      document.body.addEventListener('click', ()=> {
-        if(step === 0){
-          animate()
+      const initEvent = ()=> {
+        for(let i=0; i<4; i++){
+          handles[i].addEventListener('mousedown', (e) => {
+            const handle = e.target;
+            const startX = e.x;
+            const startY = e.y;
+            const rect = handle.getBoundingClientRect();
+
+            const mousemove = (e) => {
+              handle.style.left = `${e.x - (startX - rect.x)}px`;
+              handle.style.top = `${e.y - (startY - rect.y)}px`;
+              applyTransform(box, originalPoints, getControlPoints())
+
+            }
+            const mouseup = () => {
+              applyTransform(box, originalPoints, getControlPoints())
+              document.removeEventListener('mousemove', mousemove)
+              document.removeEventListener('mouseup', mouseup)
+            }
+            document.addEventListener('mousemove', mousemove)
+            document.addEventListener('mouseup', mouseup)
+          })
         }
-      })
+      }
+
+      initEvent();
+      initControlHandles();
     }
 
     init();
