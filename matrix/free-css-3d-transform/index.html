@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transform3d-矩阵计算基础</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    .box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 200px;
+      height: 200px;
+      background-color: green;
+
+      transform-origin: 0 0;
+      /* transform:  rotate(10deg) translateX(30px)  scale(1.1, 1.1) skew(3deg, 3deg); */
+      transform: matrix(1.07328, 0.247786, -0.13424, 1.0933, 29.5442, 5.20945);
+    }
+
+
+    .handle {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 1;
+      white-space: nowrap;
+      font-size: 10px;
+      height: 20px;
+      background-color: rgba(255, 0, 0, .5);
+    }
+  </style>
+  <script src="./numeric.min.js"></script>
+  <script>
+    // (0, 0), (200, 0), (0, 200), (200, 200)
+    // matrix(1.07328, 0.247786, -0.13424, 1.0933, 29.5442, 5.20945);
+    const pos1 = numeric.dot([
+      [1.07328, -0.13424, 29.5442],
+      [0.247786, 1.0933, 5.20945],
+      [0, 0, 1]]
+      , [0, 0, 1])
+
+    const pos2 = numeric.dot([
+      [1.07328, -0.13424, 29.5442],
+      [0.247786, 1.0933, 5.20945],
+      [0, 0, 1]]
+      , [200, 0, 1])
+
+
+    const pos3 = numeric.dot([
+      [1.07328, -0.13424, 29.5442],
+      [0.247786, 1.0933, 5.20945],
+      [0, 0, 1]]
+      , [0, 200, 1])
+
+    const pos4 = numeric.dot([
+      [1.07328, -0.13424, 29.5442],
+      [0.247786, 1.0933, 5.20945],
+      [0, 0, 1]]
+      , [200, 200, 1])
+
+    console.log(pos1, pos2, pos3, pos4)
+    // (29,5), (244.2002, 54.76665), (2.6962, 223.86945), (217, 273)
+  </script>
+
+</head>
+
+<body>
+
+  <div class="page">
+    <div class="box">
+      你好二狗
+      <div class="handle" style="left: 0; top: 0;">
+        0,0
+      </div>
+      <div class="handle" style="left: 0; top: 200px;">200, 0</div>
+      <div class="handle" style="left: 200px; top: 0;">0, 200</div>
+      <div class="handle" style="left: 200px; top: 200px;">200, 200</div>
+    </div>
+
+    <!-- <div class="box">
+      变幻后的二狗
+      <div class="handle" style="left: 0; top: 0;">29,5</div>
+      <div class="handle" style="left: 0; top: 200px;">244.2002, 54.76665</div>
+      <div class="handle" style="left: 200px; top: 0;">2.6962, 223.86945</div>
+      <div class="handle" style="left: 200px; top: 200px;">217, 273</div>
+    </div> -->
+  </div>
+</body>
+
+</html>
