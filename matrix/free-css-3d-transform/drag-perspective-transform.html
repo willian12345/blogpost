@@ -45,7 +45,7 @@
     }
 
   </style>
-  <script src="./numeric.min.js"></script>
+  <script src="./getPerspectiveTransform.js"></script>
 </head>
 <body>
   <div class="page">
@@ -90,18 +90,18 @@
         const len = points.length;
         for (let k = 0; k < len; k++) {
           let p = points[k];
-          result.push({
-            x: p[0] - points[0][0],
-            y: p[1] - points[0][1]
-          });
+          result.push([
+            p[0] - points[0][0],
+            p[1] - points[0][1]
+          ]);
         }
         /**
          result 
           [
-            {x1, y1},
-            {x2, y2},
-            {x3, y3},
-            {x4, y4},
+            [x1, y1],
+            [x2, y2],
+            [x3, y3],
+            [x4, y4],
           ]
         */
         return result;
@@ -111,72 +111,23 @@
         const result = [];
         for (let k = 0, len = target.length; k < len; k++) {
           p = target[k];
-          result.push({
-            x: p[0] - origin[0][0],
-            y: p[1] - origin[0][1]
-          });
+          result.push([
+            p[0] - origin[0][0],
+            p[1] - origin[0][1]
+        ]);
         }
         return result;
-      }
-      
-      function getTransform(from, to) {
-        var A, H, b, h;
-        A = []; // 8x8
-        // 四个点的坐标
-        for (let i =0 ; i < 4; i++) {
-          A.push([from[i].x, from[i].y, 1, 0, 0, 0, -from[i].x * to[i].x, -from[i].y * to[i].x]);
-          A.push([0, 0, 0, from[i].x, from[i].y, 1, -from[i].x * to[i].y, -from[i].y * to[i].y]);
-        }
-        b = []; // 8x1
-        for (let i = 0; i < 4; i++) {
-          b.push(to[i].x);
-          b.push(to[i].y);
-        }
-        // Solve A * h = b for h
-        // 即矩阵中常见的 Ax=b
-        // numeric.solve eg:
-        // IN> numeric.solve([[1,2],[3,4]],[17,39])
-        // OUT> [5,6]
-        // https://ccc-js.github.io/numeric2/documentation.html
-        h = numeric.solve(A, b);
-
-        /**
-          解得: h matrix
-          [
-            h0, h1, 0 h2
-            h3, h4, 0 h5
-            0,  0, 0, 1
-            h6, h7, 0 h8
-          ]
-        */
-        H = [
-              [h[0], h[1], 0, h[2]],
-              [h[3], h[4], 0, h[5]],
-              [0, 0, 1, 0],
-              [h[6], h[7], 0, 1]
-            ];
-        return H;
-      };
-
-      function getMatrixCSSParameters(H){
-        // 获取 css matrix3d(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1) 参数
-        const result = [];
-        for (let i =0; i < 4; i++) {
-          const  result1 = [];
-          for (let j = 0; j < 4; j++) {
-            result1.push(H[j][i].toFixed(20));
-          }
-          result.push(result1);
-        }
-        return result.join(',');
       }
 
       function applyTransform(element, origin, target) {
         const from = getFromPoints(origin);
         const to = getToPoints(origin, target);
-        const H = getTransform(from, to);
+        // opencv getPerspectiveTransform
+        // https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#getperspectivetransform%22
+        // https://github.com/fccm/getPerspectiveTransform
+        const m = getPerspectiveTransform(...from, ...to)
         
-        element.style.transform = `matrix3d(${getMatrixCSSParameters(H)})`;
+        element.style.transform = `matrix3d(${m.join(',')})`;
 
         element.style.transformOrigin =  '0 0';
       };

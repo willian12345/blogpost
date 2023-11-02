@@ -1,7 +1,15 @@
 
-老师学这个有什么用？老师的回答是考试用..
+你好老师！学这个有什么用？老师的回答是考试用..
 
-行列式
+在上学时期数学课上到行列式相关的课程时，曾经问过当时的数学老师，学这个做啥用的，老师犹豫了半天给我的答案是 “考试用”
+
+果然.. 最后我的成绩是不及格
+
+当然不能怪老师，我本来的数学成绩一直也是垫底的
+
+对于我这样的学渣来说，学习不能学以致用就像玩的游戏没有及时返回一样的难受
+
+我是真的很难提起兴趣去学
 
 在 css 中利用 transform 对某个元素进行 旋转，平移，缩放，倾斜非常常见以及常用
 
@@ -144,13 +152,13 @@ console.log(pos1, pos2, pos3, pos4)
 
 讲了这么多，虽然看起来很厉害，但这又有什么卵用呢？
 
-再仔细想想，想要更自由的变幻直接使用 matrix 是符合直觉的
+再仔细想想，想要仿射变换直接使用 matrix 是符合直觉的
 
 **旧坐标 · matrix = 新坐标**
 
-所以想要自由就得得到 matrix 
+所以想要自由就得用到 matrix 
 
-## 自由变幻的理论基础
+## “仿射变换”的理论基础
 
 先要进行亿点点线性代数运算
 
@@ -164,15 +172,11 @@ console.log(pos1, pos2, pos3, pos4)
 
 即将坐标 (x<sub>i</sub>, y<sub>i</sub>) 映射到 (u<sub>i</sub>, v<sub>i</sub>)
 
-还有根据  matrix3d 文档 我们需要用的是齐次矩阵， 所以先要用齐次坐标来表示每个坐标点
 
-```
-matrix3d(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1)
-```
-
-![image](./i/16.png)
 
 坐标 (x, y) 被表示为 (kx, ky, k), k 不为 0
+
+在齐次坐标中 (3,2,1) 和 (6,4,2) 都可以表示 (3,2)
 
 ![image](./i/1.png)
 
@@ -180,7 +184,9 @@ matrix3d(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1)
 
 ![image](./i/2.png)
 
-为了简化问题设 h8 设为 1
+满足 H 的值不是唯一的，举例，给 H 缩放乘以一个常数，结果矩阵依然会映射对应的点（右侧的 k<sub>i</sub> 也是一样的）
+
+为了简化问题设假定将两边都缩放直到 h8 为 1 （简化问题计算）
 
 然后将乘数乘进去
 
@@ -201,7 +207,7 @@ matrix3d(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1)
 
 ![image](./i/6.png)
 
-由于我们要表示的是四个坐标点，所以我们可以写成这样：
+由于我们要表示的是四个坐标点的映射，所以我们可以写成这样：
 
 ![image](./i/7.png)
 
@@ -209,14 +215,169 @@ matrix3d(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1)
 
 ![image](./i/8.png)
 
-最后一个小问题，就是 Matrix3d 需要的是 4x4 的矩阵，我们从开始就忽略掉了 z 轴值（由于四个点都在同一个平面，所以 z = 0）, 所以把 z 重新映射回矩阵：
+最后一个小问题，就是 Matrix3d 需要的是 4x4 的矩阵，我们从开始就忽略掉了 z 轴值（由于四个点都在同一个平面，所以 z = 0）, 所以把 z 重新映射回矩阵
+
+
+```
+matrix3d(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1)
+```
+
+![image](./i/16.png)
 
 ![image](./i/9.png)
 
 
 这就是最后用于 css 上的 matrix3d 的矩阵
 
-  
+
+## 将其应用到 HTML/Javascript 内
+
+创建一个 id 为 box 的 div 作为变化源
+
+创建一个 id 为 targetBox 的 div 作为目标
+
+1. 创建一个 getPoints 用于获取四个点坐标
+   
+   ```
+   ... 省略获取 targetBox，box 的代码
+
+   function getPoints(element){
+        const rect = element.getBoundingClientRect();
+        return [
+            [rect.left, rect.top],
+            [rect.left, rect.bottom],
+            [rect.right, rect.top],
+            [rect.right, rect.bottom],
+        ];
+    }
+
+    const target = getPoints(targetBox)
+    const origin = getPoints(box)
+   ```
+
+2. 分别转换成相对坐标点
+   
+   ```
+   function getFromPoints(points){
+    // 映射前四个点相对坐标 
+    const result = [];
+    const len = points.length;
+    for (let k = 0; k < len; k++) {
+        let p = points[k];
+        result.push({
+        x: p[0] - points[0][0],
+        y: p[1] - points[0][1]
+        });
+    }
+    /**
+        result 
+        [
+        {x1, y1},
+        {x2, y2},
+        {x3, y3},
+        {x4, y4},
+        ]
+    */
+    return result;
+    }
+    function getToPoints(origin, target){
+        // 映射后四个点相对坐标 
+        const result = [];
+        for (let k = 0, len = target.length; k < len; k++) {
+            p = target[k];
+            result.push({
+            x: p[0] - origin[0][0],
+            y: p[1] - origin[0][1]
+            });
+        }
+        return result;
+    }
+
+    const from = getFromPoints(origin);
+    const to = getToPoints(origin, target);
+   ```
+
+3. 通过 from 与 to 获取 H
+   
+   ```
+   function getTransform(from, to) {
+        var A, H, b, h;
+        A = []; // 8x8
+        // 四个点的坐标
+        for (let i =0 ; i < 4; i++) {
+          A.push([from[i].x, from[i].y, 1, 0, 0, 0, -from[i].x * to[i].x, -from[i].y * to[i].x]);
+          A.push([0, 0, 0, from[i].x, from[i].y, 1, -from[i].x * to[i].y, -from[i].y * to[i].y]);
+        }
+        b = []; // 8x1
+        for (let i = 0; i < 4; i++) {
+          b.push(to[i].x);
+          b.push(to[i].y);
+        }
+        // Solve A * h = b for h
+        // 即矩阵中常见的 Ax=b
+        // numeric.solve eg:
+        // IN> numeric.solve([[1,2],[3,4]],[17,39])
+        // OUT> [5,6]
+        // https://ccc-js.github.io/numeric2/documentation.html
+        h = numeric.solve(A, b);
+
+        /**
+          解得: h matrix
+          [
+            h0, h1, 0 h2
+            h3, h4, 0 h5
+            0,  0, 0, 1
+            h6, h7, 0 h8
+          ]
+        */
+        H = [
+              [h[0], h[1], 0, h[2]],
+              [h[3], h[4], 0, h[5]],
+              [0, 0, 1, 0],
+              [h[6], h[7], 0, 1]
+            ];
+        return H;
+    };
+
+    const H = getTransform(from, to);
+   ```
+4. 生成 css 值应用到 div 上
+   
+   ```
+   function getMatrixCSSParameters(H){
+        // 获取 css matrix3d(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1) 参数
+        const result = [];
+        for (let i =0; i < 4; i++) {
+            const  result1 = [];
+            for (let j = 0; j < 4; j++) {
+            result1.push(H[j][i].toFixed(20));
+            }
+            result.push(result1);
+        }
+        return result.join(',');
+    }
+
+    div.style.transform = `matrix3d(${getMatrixCSSParameters(H)})`;
+   ```
+
+走了一大圈，现在终于可以实现“仿射变换”了
+
+
+## 直接使用现成的库
+
+我们碰到的问题大概率编程的前辈们都碰到过了
+
+通过搜索后发现“仿射变换” 在 opencv 中有现成的函数
+
+```
+const H = cv.getPerspectiveTransform(from, to);
+```
+
+然后就 github 上找了一下，果然是有人实现了
+
+
+
+
 
 ----
 参考资料
@@ -230,3 +391,7 @@ https://franklinta.com/2014/09/08/computing-css-matrix3d-transforms/
 https://docs.opencv.org/2.4/modules/imgproc/doc/geometric_transformations.html#getperspectivetransform%22
 
 https://www.zweigmedia.com/RealWorld/tutorialsf1/frames3_2.html
+
+https://ccc-js.github.io/numeric2/
+
+https://github.com/fccm/getPerspectiveTransform
