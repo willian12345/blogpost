@@ -151,6 +151,7 @@ const extensions = {
      */
     add(...extensions: Array<ExtensionFormatLoose | any>)
     {
+        console.log(2222222)
         // Handle any extensions either passed as class w/ data or as data
         extensions.map(normalizeExtension).forEach((ext) =>
         {
@@ -247,7 +248,6 @@ const extensions = {
                 {
                     return;
                 }
-
                 list.push(extension.ref);
                 list.sort((a, b) => normalizePriority(b, defaultPriority) - normalizePriority(a, defaultPriority));
             },
@@ -263,6 +263,7 @@ const extensions = {
         );
     },
 };
+
 
 export {
     extensions,

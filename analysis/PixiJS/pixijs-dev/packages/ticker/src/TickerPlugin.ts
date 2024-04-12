@@ -137,5 +137,5 @@ export class TickerPlugin
         }
     }
 }
-
 extensions.add(TickerPlugin);
+

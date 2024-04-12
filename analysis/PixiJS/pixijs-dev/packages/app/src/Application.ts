@@ -3,7 +3,6 @@ import { Container } from '@pixi/display';
 
 import type { ICanvas, IRenderer, IRendererOptionsAuto, Rectangle } from '@pixi/core';
 import type { IDestroyOptions } from '@pixi/display';
-
 /**
  * Any plugin that's usable for Application should contain these methods.
  * @memberof PIXI
@@ -76,7 +75,7 @@ export class Application<VIEW extends ICanvas = ICanvas>
         }, options);
 
         this.renderer = autoDetectRenderer<VIEW>(options);
-        console.log(this.renderer, 88888)
+        // console.log('hello', 88888);
         // install plugins here
         Application._plugins.forEach((plugin) =>
         {

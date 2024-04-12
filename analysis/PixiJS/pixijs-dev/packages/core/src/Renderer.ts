@@ -658,3 +658,4 @@ export class Renderer extends SystemManager<Renderer> implements IRenderer
 extensions.handleByMap(ExtensionType.RendererPlugin, Renderer.__plugins);
 extensions.handleByMap(ExtensionType.RendererSystem, Renderer.__systems);
 extensions.add(Renderer);
+
