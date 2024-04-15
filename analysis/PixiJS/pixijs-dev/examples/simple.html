@@ -27,9 +27,10 @@
     // rectangle.rotation = Math.PI / 4;  
     // app.stage.addChild(rectangle);  
   
-    // app.ticker.add(() => {  
-    //   rectangle.rotation += 0.01;  
-    // });  
+    app.ticker.add((d) => {  
+      console.log(app.ticker.deltaTime)
+      // rectangle.rotation += 0.01;  
+    });  
   </script>
 
 </body>
