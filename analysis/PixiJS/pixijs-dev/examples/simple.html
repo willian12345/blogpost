@@ -18,19 +18,19 @@
   <script src="/bundles/pixi.js/dist/pixi.js"></script>
   <script type="text/javascript">
     const app = new PIXI.Application({ width: 800, height: 600 });  
-    // document.body.appendChild(app.view);  
+    document.body.appendChild(app.view);  
   
-    // const rectangle = PIXI.Sprite.from('logo.png');  
-    // rectangle.x = 100;  
-    // rectangle.y = 100;  
-    // rectangle.anchor.set(0.5);  
-    // rectangle.rotation = Math.PI / 4;  
-    // app.stage.addChild(rectangle);  
+    const rectangle = PIXI.Sprite.from('logo.png');  
+    rectangle.x = 100;  
+    rectangle.y = 100;  
+    rectangle.anchor.set(0.5);  
+    rectangle.rotation = Math.PI / 4;  
+    app.stage.addChild(rectangle);  
   
-    app.ticker.add((d) => {  
-      console.log(app.ticker.deltaTime)
-      // rectangle.rotation += 0.01;  
-    });  
+    // app.ticker.add((d) => {  
+    //   console.log(app.ticker.deltaTime)
+    //   rectangle.rotation += 0.01;  
+    // });  
   </script>
 
 </body>

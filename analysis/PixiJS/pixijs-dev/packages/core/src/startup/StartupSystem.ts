@@ -56,7 +56,7 @@ export class StartupSystem implements ISystem<StartupSystemOptions>
     run(options: StartupSystemOptions): void
     {
         const { renderer } = this;
-
+        console.log(renderer.runners.init, 44444)
         renderer.runners.init.emit(renderer.options);
 
         if (options.hello)
