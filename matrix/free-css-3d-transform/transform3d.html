@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Transform3d -- click page to see the effect</title>
   <style>
-    html,body{margin: 0; padding: 0;}
+    html,body{margin: 0; padding: 0; user-select: none;}
     .page{
       display: flex;
       align-items: center;
@@ -31,7 +31,7 @@
       width: 100%;
     }
 
-    /* .tips{
+    .tips{
       position: absolute;
       top: 100px;
       left: 0;
@@ -39,13 +39,13 @@
       z-index: 2;
       text-align: center;
       color: green;
-    } */
+    }
 
   </style>
   <script src="./numeric.min.js"></script>
 </head>
 <body>
-  <div class="tips">click the page</div>
+  <div class="tips">click the page </div>
   <div class="page">
     <div class="target-box" id="targetBox">
       <div class="box" id="box">
