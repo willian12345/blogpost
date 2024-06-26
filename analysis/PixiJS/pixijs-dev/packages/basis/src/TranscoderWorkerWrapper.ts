@@ -84,6 +84,7 @@ export function TranscoderWorkerWrapper(): void
     const messageHandlers = {
         init: (message: IInitializeTranscoderMessage): ITranscodeResponse =>
         {
+            console.log(8888888)
             if (!self.BASIS)
             {
                 console.warn('jsSource was not prepended?');
@@ -109,6 +110,7 @@ export function TranscoderWorkerWrapper(): void
         },
         transcode(message: ITranscodeMessage): ITranscodeResponse
         {
+            console.log(999999)
             const basisData = message.basisData;
             const BASIS = basisBinding;
 

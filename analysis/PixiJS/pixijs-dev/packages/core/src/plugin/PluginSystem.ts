@@ -88,7 +88,6 @@ export class PluginSystem implements ISystem
     init(): void
     {
         const staticMap = this.rendererPlugins;
-        console.log(staticMap, 8888888888)
         for (const o in staticMap)
         {
             this.plugins[o] = new (staticMap[o])(this.renderer);

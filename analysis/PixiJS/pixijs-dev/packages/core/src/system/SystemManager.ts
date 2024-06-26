@@ -72,7 +72,6 @@ export class SystemManager<R=IRenderer> extends EventEmitter
     addSystem(ClassRef: ISystemConstructor<R>, name: string): this
     {
         const system = new ClassRef(this as any as R);
-
         if ((this as any)[name])
         {
             throw new Error(`Whoops! The name "${name}" is already in use`);

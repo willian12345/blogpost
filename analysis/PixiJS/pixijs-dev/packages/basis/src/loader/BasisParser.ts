@@ -168,6 +168,7 @@ export class BasisParser
      */
     public static transcodeSync(arrayBuffer: ArrayBuffer): TranscodedResourcesArray
     {
+        console.log(22222222222222)
         if (!BasisParser.defaultRGBAFormat && !BasisParser.defaultRGBFormat)
         {
             BasisParser.autoDetectFormats();

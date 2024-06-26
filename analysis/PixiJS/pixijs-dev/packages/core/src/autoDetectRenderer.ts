@@ -40,6 +40,7 @@ extensions.handleByList(ExtensionType.Renderer, renderers);
  */
 export function autoDetectRenderer<VIEW extends ICanvas = ICanvas>(options?: Partial<IRendererOptionsAuto>): IRenderer<VIEW>
 {
+    console.log(renderers,3333)
     for (const RendererType of renderers)
     {
         if (RendererType.test(options))

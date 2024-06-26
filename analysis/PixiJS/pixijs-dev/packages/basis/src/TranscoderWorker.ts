@@ -69,6 +69,7 @@ export class TranscoderWorker
 
     constructor()
     {
+        console.info(3333333)
         this.isInit = false;
         this.load = 0;
         this.initPromise = new Promise((resolve) => { this.onInit = resolve; });

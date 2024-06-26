@@ -158,7 +158,6 @@ const extensions = {
             {
                 const handlers = this._addHandlers;
                 const queue = this._queue;
-
                 if (!handlers[type])
                 {
                     queue[type] = queue[type] || [];
@@ -170,7 +169,6 @@ const extensions = {
                 }
             });
         });
-
         return this;
     },
 
