@@ -20,13 +20,13 @@
     const app = new PIXI.Application({ width: 800, height: 600 , forceCanvas: true});  
     document.body.appendChild(app.view);  
   
-    const rectangle = PIXI.Sprite.from('logo.png');  
-    rectangle.x = 100;  
-    rectangle.y = 100;  
-    rectangle.anchor.set(0.5);  
-    rectangle.rotation = Math.PI / 4;  
-    rectangle.tint = 'red';
-    app.stage.addChild(rectangle);  
+    const sprite = PIXI.Sprite.from('logo.png');  
+    sprite.x = 100;  
+    sprite.y = 100;  
+    sprite.anchor.set(0.5);  
+    sprite.rotation = Math.PI / 4;  
+    sprite.tint = 'red';
+    app.stage.addChild(sprite);  
   </script>
 
 </body>

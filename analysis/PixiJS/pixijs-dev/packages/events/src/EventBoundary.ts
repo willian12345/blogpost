@@ -228,6 +228,9 @@ export class EventBoundary
         {
             for (let i = 0, j = mappers.length; i < j; i++)
             {
+                // if(e.type !== 'pointermove'){
+                //     console.log(e)
+                // }
                 mappers[i].fn(e);
             }
         }
@@ -670,6 +673,7 @@ export class EventBoundary
      * @param from
      */
     protected mapPointerDown(from: FederatedEvent): void
+    
     {
         if (!(from instanceof FederatedPointerEvent))
         {
@@ -678,6 +682,7 @@ export class EventBoundary
             return;
         }
 
+        
         const e = this.createPointerEvent(from);
 
         this.dispatchEvent(e, 'pointerdown');

@@ -17,20 +17,17 @@
 <body>
   <script src="/bundles/pixi.js/dist/pixi.js"></script>
   <script type="text/javascript">
-    const app = new PIXI.Application({ width: 800, height: 600 });  
+    const app = new PIXI.Application({ width: 800, height: 600, autoStart: false });  
     document.body.appendChild(app.view);  
   
     const sprite = PIXI.Sprite.from('logo.png');  
-    sprite.x = 100;  
-    sprite.y = 100;  
-    sprite.anchor.set(0.5);  
-    sprite.rotation = Math.PI / 4;  
+    sprite.eventMode = 'static';
+    sprite.on('pointerdown', ()=> {
+      console.log('clicked')
+    })
+
     app.stage.addChild(sprite);  
-  
-    // app.ticker.add((d) => {  
-    //   console.log(app.ticker.deltaTime)
-    //   rectangle.rotation += 0.01;  
-    // });  
+    app.start()
   </script>
 
 </body>
