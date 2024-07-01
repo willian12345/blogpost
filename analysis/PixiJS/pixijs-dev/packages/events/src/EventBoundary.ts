@@ -228,9 +228,6 @@ export class EventBoundary
         {
             for (let i = 0, j = mappers.length; i < j; i++)
             {
-                // if(e.type !== 'pointermove'){
-                //     console.log(e)
-                // }
                 mappers[i].fn(e);
             }
         }

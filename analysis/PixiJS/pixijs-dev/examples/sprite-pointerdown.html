@@ -26,7 +26,17 @@
       console.log('clicked')
     })
 
+    const sprite2 = PIXI.Sprite.from('logo.png');
+    sprite2.tint = 'red';
+    sprite2.eventMode = 'static';
+    sprite2._Name = 'sprite2';
+    sprite2.x = 100
+    sprite2.on('pointerdown', ()=> {
+      console.log('clicked2')
+    })
+
     app.stage.addChild(sprite);  
+    app.stage.addChild(sprite2);  
     app.start()
   </script>
 

@@ -344,7 +344,6 @@ export class EventSystem implements ISystem<EventSystemOptions>
     {
         if (!this.features.click) return;
         this.rootBoundary.rootTarget = this.renderer.lastObjectRendered as DisplayObject;
-
         const events = this.normalizeToPointerData(nativeEvent);
 
         /*
