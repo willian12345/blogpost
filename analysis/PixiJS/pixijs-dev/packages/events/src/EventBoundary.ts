@@ -260,7 +260,7 @@ export class EventBoundary
             this.hitTestFn,
             this.hitPruneFn,
         );
-
+        invertedPath && console.log('找到的：', invertedPath[0]);
         return invertedPath && invertedPath[0];
     }
 
@@ -491,7 +491,8 @@ export class EventBoundary
         {
             const children = currentTarget.children;
 
-            for (let i = children.length - 1; i >= 0; i--)
+            // for (let i = children.length - 1; i >= 0; i--)
+            for (let i = 0; i < children.length; i++)
             {
                 const child = children[i] as DisplayObject;
 
@@ -502,6 +503,7 @@ export class EventBoundary
                     testFn,
                     pruneFn
                 );
+                console.log(nestedHit)
 
                 if (nestedHit)
                 {
@@ -670,7 +672,6 @@ export class EventBoundary
      * @param from
      */
     protected mapPointerDown(from: FederatedEvent): void
-    
     {
         if (!(from instanceof FederatedPointerEvent))
         {
@@ -679,7 +680,6 @@ export class EventBoundary
             return;
         }
 
-        
         const e = this.createPointerEvent(from);
 
         this.dispatchEvent(e, 'pointerdown');
