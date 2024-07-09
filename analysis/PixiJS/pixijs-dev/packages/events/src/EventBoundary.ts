@@ -260,7 +260,7 @@ export class EventBoundary
             this.hitTestFn,
             this.hitPruneFn,
         );
-        invertedPath && console.log('找到的：', invertedPath[0]);
+
         return invertedPath && invertedPath[0];
     }
 
@@ -393,7 +393,6 @@ export class EventBoundary
             for (let i = children.length - 1; i >= 0; i--)
             {
                 const child = children[i] as DisplayObject;
-
                 const nestedHit = this.hitTestMoveRecursive(
                     child,
                     this._isInteractive(eventMode) ? eventMode : child.eventMode,
@@ -491,11 +490,9 @@ export class EventBoundary
         {
             const children = currentTarget.children;
 
-            // for (let i = children.length - 1; i >= 0; i--)
-            for (let i = 0; i < children.length; i++)
+            for (let i = children.length - 1; i >= 0; i--)
             {
                 const child = children[i] as DisplayObject;
-
                 const nestedHit = this.hitTestRecursive(
                     child,
                     this._isInteractive(eventMode) ? eventMode : child.eventMode,
@@ -503,7 +500,6 @@ export class EventBoundary
                     testFn,
                     pruneFn
                 );
-                console.log(nestedHit)
 
                 if (nestedHit)
                 {
@@ -681,7 +677,6 @@ export class EventBoundary
         }
 
         const e = this.createPointerEvent(from);
-
         this.dispatchEvent(e, 'pointerdown');
 
         if (e.pointerType === 'touch')
@@ -1446,7 +1441,7 @@ export class EventBoundary
     private notifyListeners(e: FederatedEvent, type: string): void
     {
         const listeners = ((e.currentTarget as any)._events as EmitterListeners)[type];
-
+        
         if (!listeners) return;
         if (!e.currentTarget.isInteractive()) return;
 

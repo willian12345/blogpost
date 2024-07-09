@@ -75,7 +75,6 @@ export class Application<VIEW extends ICanvas = ICanvas>
         }, options);
 
         this.renderer = autoDetectRenderer<VIEW>(options);
-        console.log(this.renderer);
         // install plugins here
         Application._plugins.forEach((plugin) =>
         {
