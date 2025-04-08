@@ -1,6 +1,6 @@
 Is your app online? Here's how to reliably know in just 10 lines of JS [Guide]
 
-你的联网正常吗？ 10 行代码就可以靠谱的判断是否联网成功
+你的 app 是否是 online 状态？ 10 行代码就可以靠谱的判断是否联网成功
 
 We usually expect our web apps to be online but that ignores reality.
 
