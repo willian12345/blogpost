@@ -377,16 +377,119 @@ const savedData = JSON.stringify(userData);
 console.log(savedData);         // Only shows: {"username":"alex"}
 ```
 
+>> Think of JSON like a photocopier that can’t see Symbols. When you make a copy (stringify), anything stored with a Symbol key becomes invisible. Once it’s invisible, there’s no way to bring it back when making a new object (parse).
+
+>> 把JSON序列化想象成一个复印机，它看不到 Symbols。 当你复制时(字符串化JSON)，所有使用 Symbol 存储的 key 都将不可见。一旦不可见，那么也就没办法在 parse 回对象时还原回来
+
+String coercion of Symbols leads to another common pitfall. While you might expect Symbols to work like other primitives, they have strict rules about type conversion:
+
+
+Symbols 字符串操作还有一个普遍的小陷井，当你期望 Symbols 与其它基元类型一样工作时，它却有着严格的类型转换规则：
+
+```
+const label = Symbol('myLabel');
+
+// This throws an error
+console.log(label + ' is my label'); // TypeError
+
+// Instead, you must explicitly convert to string
+// 需要明确的将转换成 字符串
+console.log(String(label) + ' is my label'); // "Symbol(myLabel) is my label"
+```
+
+Memory handling with Symbols can be tricky, especially when using the global Symbol registry. Regular Symbols can be garbage collected when no references remain, but registry Symbols stick around:
+
+Symbols 也会导致内存相关的问题，特别是在使用全局 Symbol 注册时。
+
+普通 Symbols 在没有引用时会被垃圾回收，但注册的全局 Symbols 则会一直在内存中逗留：
+
+```
+// Regular Symbol can be garbage collected
+// 普通的能被垃圾回收内存
+let regularSymbol = Symbol('temp');
+regularSymbol = null; // Symbol can be cleaned up
+
+// Registry Symbol persists
+// 注册 Symbol 
+Symbol.for('permanent'); // Creates registry entry
+// Even if we don't keep a reference, it stays in registry
+// 即使没有引用了，它还是存在于内存中
+console.log(Symbol.for('permanent') === Symbol.for('permanent')); // true
+```
+
+Symbol sharing between modules shows an interesting pattern. When using Symbol.for(), the Symbol becomes available across your entire application, while regular Symbols stay unique:
+
+Symbol 在不同模块中共享展示了一种有趣的模式。当使用 `Symbol.for()`, 时 Symbol 变的允许跨越整个应用使用， 
+
+而普通 Symbols 则还是保持唯一：
+
+```
+// In module A
+// A 模块
+const SHARED_KEY = Symbol.for('app.sharedKey');
+const moduleA = {
+  [SHARED_KEY]: 'secret value'
+};
+
+// In module B - even in a different file
+// 甚至是在不同文件内的 B 模块
+const sameKey = Symbol.for('app.sharedKey');
+console.log(SHARED_KEY === sameKey);                // true
+console.log(moduleA[sameKey]);                      // 'secret value'
+
+// Regular Symbols don't share
+// 普通 Symbols 不共享
+const regularSymbol = Symbol('regular');
+const anotherRegular = Symbol('regular');
+console.log(regularSymbol === anotherRegular);      // false
+```
+
+>> Symbol.for() creates Symbols that work like shared keys - any part of your application can access the same Symbol by using the same name. Regular Symbols, on the other hand, are always unique, even if they have the same name.
+
+>> 由 Symbol.for() 创建的 Symbols 工作模式像是共享的 keys - 你应用的任何一部分都可以通过同样名称访问相同的 Symbol. 普通 Symbols 则始终保持其唯一性，即使使用相同名称创建
+
+## When To Use Symbols
+Symbols shine in specific situations. Use them when you need truly unique property keys, like adding metadata that won’t interfere with existing properties. They’re perfect for creating specialized object behaviors through well-known Symbols, and the registry Symbol.for() helps share constants across your application.
+
+## 什么时候使用 Symbols 
+
+Symbols 在特定场景内可以发挥特定的作用。当你需要使用完全唯一性的属性时，比如添加元数据而不会影响本来已存在的其它属性。
+
+通过它们众所周知的 Symbols 非常适合创建有特殊行为的对象, 还有，通过 Symbol.for() 帮助跨整个应用共享常量。
+
+```
+// Use symbols for private-like properties
+// 创建私有属性
+const userIdSymbol = Symbol('id');
+const user = {
+  [userIdSymbol]: 123,
+  name: 'Alex'
+};
+
+// Leverage symbols for special behaviors
+// 利用 Symbols 创建特殊行为
+const customIterator = {
+  [Symbol.iterator]() {
+    // Implement custom iterator logic
+  }
+};
+
+// Share constants across modules using Symbol.for()
+// 利用 Symbol.for() 跨模块共享常量
+const SHARED_ACTION = Symbol.for('action');
+```
+
+
+Symbols might seem unusual at first, but they solve real problems in JavaScript. They provide uniqueness when we need it, privacy when we want it, and hooks into JavaScript’s internal behaviors when we require it.
+
+
+咋看起来 Symbols 很不常用，但它们在 JavaScript 确实能解决一些实际问题。
+
+当我们需要唯一性，私有性，还有JavaScript内部行为添加钩子时它能帮上忙。
 
 
 
 
+----
+原英文：https://www.trevorlasn.com/blog/symbols-in-javascript
 
-
-
-
-
-
-
-
-https://www.trevorlasn.com/blog/symbols-in-javascript
